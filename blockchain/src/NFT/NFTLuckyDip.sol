@@ -133,10 +133,8 @@ contract NFTLuckyDip {
         s_luckyDips[i].deployed = address(nftBooster);
         // mint NFT one by one, by passing URI and bid winner
         for (uint256 j = 0; j < getLuckyDipNFTLength(i); j++) {
-            nftBooster.mintNft(getLuckyDipNFT(i, j), getBestBidder(i));
+            nftBooster.mintNft(getLuckyDipNFT(i, j), winner);
         }
-        // and by giving the address the full ownership of this contract
-        nftBooster.transferOwnership(getBestBidder(i));
         // send the bid to the owner of this contract
         uint256 finalBidAmout = getCurrentBiddingPriceInWei(i);
         if (address(this).balance < finalBidAmout) {
