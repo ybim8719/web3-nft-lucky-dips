@@ -122,7 +122,12 @@ contract NFTLuckyDip {
         // TODO LATER duration time has been passed
         // create new NFT contract and store address
         NFTBooster nftBooster = new NFTBooster(
-            getName(i), getSymbol(i), getLuckyDipDescription(i), getCurrentBiddingPriceInWei(i), getLuckyDipNFTLength(i)
+            getName(i),
+            getSymbol(i),
+            getLuckyDipDescription(i),
+            getCurrentBiddingPriceInWei(i),
+            getLuckyDipNFTLength(i),
+            winner
         );
         // store contract adress in lucky dip
         s_luckyDips[i].deployed = address(nftBooster);

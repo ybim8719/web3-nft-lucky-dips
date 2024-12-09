@@ -29,8 +29,9 @@ contract NFTBooster is ERC721, Ownable {
         string memory _symbol,
         string memory _description,
         uint256 _finalBid,
-        uint256 _maxNumberOfMintableNFT
-    ) ERC721(_name, _symbol) {
+        uint256 _maxNumberOfMintableNFT,
+        address _owner
+    ) ERC721(_name, _symbol) Ownable(_owner) {
         s_tokenCounter = 0;
         s_maxNumberOfMintableNFT = _maxNumberOfMintableNFT;
         s_description = _description;
