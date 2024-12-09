@@ -1,0 +1,17 @@
+{
+    "bidStep": 100000000000000,
+    "description": "Pussel is a former Shaolin monk who painted instead of doing his kung-fu training. He specializes in scented mountains, and his new collection features shyriu the dragon.",
+    "name": "Pussel",
+    "nftCollection": [
+        "pussel/image1.svg",
+        "pussel/image2.svg",
+        "pussel/image3.svg",
+        "pussel/image4.svg",
+        "pussel/image5.svg",
+        "pussel/image6.svg",
+        "pussel/image7.svg",
+        "pussel/image8.svg"
+    ],
+    "startingBid": 100000000000000,
+    "symbol": "PPP"
+}

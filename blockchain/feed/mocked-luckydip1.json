@@ -1,0 +1,13 @@
+{
+    "bidStep": 10000000000000,
+    "description": "A nice collection from Jean Michel Mock",
+    "name": "JeanMiMock",
+    "nftCollection": [
+        "mock/image1.svg",
+        "mock/image2.svg",
+        "mock/image3.svg",
+        "mock/image4.svg"
+    ],
+    "startingBid": 2500000000000000,
+    "symbol": "MOCK"
+}

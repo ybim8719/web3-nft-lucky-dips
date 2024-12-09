@@ -1,0 +1,16 @@
+{
+    "bidStep": 250000000000000,
+    "description": "Jean Michel Baskaize is a nigerian artist mainly famous known for his suite of works depicting his passion for hot chocolate and macramé. His new collection comprises 7 works on the theme of perspiration",
+    "name": "JeanMi",
+    "nftCollection": [
+        "baskaize/image1.svg",
+        "baskaize/image2.svg",
+        "baskaize/image3.svg",
+        "baskaize/image4.svg",
+        "baskaize/image5.svg",
+        "baskaize/image6.svg",
+        "baskaize/image7.svg"
+    ],
+    "startingBid": 2500000000000000,
+    "symbol": "JMB"
+}

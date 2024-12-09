@@ -1,0 +1,15 @@
+{
+    "bidStep": 100000000000000,
+    "description": "Chantal Mangemaure is a former prison guard who drew inspiration from her daily prison life. She is known for capturing the human essence, and her NFT series has disability as its theme. ",
+    "name": "Mangemaure",
+    "nftCollection": [
+        "mangemaur/image1.svg",
+        "mangemaur/image2.svg",
+        "mangemaur/image3.svg",
+        "mangemaur/image4.svg",
+        "mangemaur/image5.svg",
+        "mangemaur/image6.svg"
+    ],
+    "startingBid": 100000000000000,
+    "symbol": "MMGM"
+}
