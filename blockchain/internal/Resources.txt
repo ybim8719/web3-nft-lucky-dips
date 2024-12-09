@@ -1,0 +1,21 @@
+
+Go lire : https://updraft.cyfrin.io/courses/foundry/foundry-fund-me/solidity-storage-optimization?lesson_format=transcript
+
+About OP CODe : https://updraft.cyfrin.io/courses/foundry/foundry-fund-me/optimise-solidity-function-gas-costs?lesson_format=transcript
+
+Integration test :https://updraft.cyfrin.io/courses/foundry/foundry-fund-me/solidity-integration-tests?lesson_format=quiz
+
+Storage and BYTEs : 
+https://updraft.cyfrin.io/courses/foundry/foundry-fund-me/solidity-storage-optimization
+
+cyfrin mock LINK token 
+https://github.com/Cyfrin/foundry-smart-contract-lottery-cu/blob/efac6e2a5c2df6d1936d117f40f93575d25cf694/test/mocks/LinkToken.sol
+
+https://blog.openzeppelin.com/deconstructing-a-solidity-smart-contract-part-i-introduction-832efd2d7737
+
+Check encoded signatures and selectors
+
+https://blog.openzeppelin.com/deconstructing-a-solidity-smart-contract-part-i-introduction-832efd2d7737
+
+snes css https://nostalgic-css.github.io/NES.css/
+
