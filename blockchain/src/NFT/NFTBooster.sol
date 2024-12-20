@@ -9,9 +9,9 @@ import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 /**
  * @title
  * @author
- * @notice a very basic contract inherinting ERC721 and representing a booter of NFT won on the lucky dip bid.
+ * @notice a very basic contract inherinting ERC721 and representing a booter of NFT won on the aunction bid.
  * Winner is the owner of all of the booster NFT/
- * The limit of mintable NFT is the number of NFT described in the former lucky dip.
+ * The limit of mintable NFT is the number of NFT described in the former aunction.
  * @dev
  */
 contract NFTBooster is ERC721, Ownable {

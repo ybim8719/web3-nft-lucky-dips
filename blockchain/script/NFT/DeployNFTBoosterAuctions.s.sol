@@ -2,21 +2,21 @@
 pragma solidity ^0.8.19;
 
 import {Script, console} from "forge-std/Script.sol";
-import {NFTLuckyDip} from "../../src/NFT/NFTLuckyDip.sol";
-import {LuckyDip} from "../../src/NFT/structs/LuckyDip.sol";
+import {NFTBoosterAuctions} from "../../src/NFT/NFTBoosterAuctions.sol";
+import {Auction} from "../../src/NFT/structs/Auction.sol";
 import {ConvertSvg} from "./ConvertSvg.sol";
 
 /**
  * @title
  * @author ybim
- * @notice WARNING, json files contain the luckydips to the future bids. For any customization of these data, please stricty respect
+ * @notice WARNING, json files contain the Auctions to the future bids. For any customization of these data, please stricty respect
  * the alphabetical order of the keys inside the json since it's a particularity of vm.parsejson()
  * https://book.getfoundry.sh/cheatcodes/parse-json
  */
-contract DeployNFTLuckyDip is Script {
+contract DeployNFTBoosterAuctions is Script {
     using ConvertSvg for string;
 
-    struct LuckyDipJson {
+    struct AuctionJson {
         uint256 bidStep;
         string description;
         string name;
@@ -32,73 +32,73 @@ contract DeployNFTLuckyDip is Script {
     /**
      * STATES
      */
-    NFTLuckyDip luckyDip;
+    NFTBoosterAuctions s_nftBoosterAuctions;
     string[] s_tmpImageUris;
     /**
      * JSON FEED PATH
      */
-    string[] luckyDipsFeed =
+    string[] auctionsFeed =
         ["./feed/lucky-dip1.json", "./feed/lucky-dip2.json", "./feed/lucky-dip3.json", "./feed/lucky-dip4.json"];
-    string[] mockedLuckyDipsFeed = ["./feed/mocked-luckydip1.json"];
+    string[] mockedAuctionsFeed = ["./feed/mocked-luckydip1.json"];
 
     /**
      * ERROR
      */
     error NftCollectionEmpty();
 
-    function run() external returns (NFTLuckyDip) {
+    function run() external returns (NFTBoosterAuctions) {
         deploy();
-        populateLuckyDips();
-        return luckyDip;
+        populateAuctions();
+        return s_nftBoosterAuctions;
     }
 
     /**
      * CALLED BY TEST Contract to deploy and feed contract with mocked data
      */
-    function runMocked(address caller) external returns (NFTLuckyDip) {
+    function runMocked(address caller) external returns (NFTBoosterAuctions) {
         deploy();
-        populateWithMockedLuckyDips(caller);
-        return luckyDip;
+        populateWithMockedAuctions(caller);
+        return s_nftBoosterAuctions;
     }
 
     function deploy() internal {
         vm.startBroadcast();
-        luckyDip = new NFTLuckyDip();
+        s_nftBoosterAuctions = new NFTBoosterAuctions();
         vm.stopBroadcast();
     }
 
-    function populateLuckyDips() public {
-        populateFromJson(msg.sender, luckyDipsFeed);
+    function populateAuctions() public {
+        populateFromJson(msg.sender, auctionsFeed);
     }
 
-    function populateWithMockedLuckyDips(address caller) public {
-        populateFromJson(caller, mockedLuckyDipsFeed);
+    function populateWithMockedAuctions(address caller) public {
+        populateFromJson(caller, mockedAuctionsFeed);
     }
 
     function populateFromJson(address caller, string[] memory feeds) internal {
         for (uint256 i = 0; i < feeds.length; i++) {
             string memory json = vm.readFile(feeds[i]);
             bytes memory data = vm.parseJson(json);
-            LuckyDipJson memory luckyDipToAdd = abi.decode(data, (LuckyDipJson));
-            if (luckyDipToAdd.nftCollection.length == 0) {
+            AuctionJson memory auctionToAdd = abi.decode(data, (AuctionJson));
+            if (auctionToAdd.nftCollection.length == 0) {
                 revert NftCollectionEmpty();
             }
             s_tmpImageUris = new string[](0);
-            for (uint256 j = 0; j < luckyDipToAdd.nftCollection.length; j++) {
+            for (uint256 j = 0; j < auctionToAdd.nftCollection.length; j++) {
                 // set encoded svg and store temporaly
                 s_tmpImageUris.push(
                     ConvertSvg.svgToImageURI(
-                        vm.readFile(string(abi.encodePacked(SVG_FOLDER_PATH, luckyDipToAdd.nftCollection[j])))
+                        vm.readFile(string(abi.encodePacked(SVG_FOLDER_PATH, auctionToAdd.nftCollection[j])))
                     )
                 );
             }
             vm.prank(caller);
-            luckyDip.addLuckyDip(
-                luckyDipToAdd.description,
-                luckyDipToAdd.symbol,
-                luckyDipToAdd.name,
-                luckyDipToAdd.startingBid,
-                luckyDipToAdd.bidStep,
+            s_nftBoosterAuctions.addAuction(
+                auctionToAdd.description,
+                auctionToAdd.symbol,
+                auctionToAdd.name,
+                auctionToAdd.startingBid,
+                auctionToAdd.bidStep,
                 s_tmpImageUris
             );
         }

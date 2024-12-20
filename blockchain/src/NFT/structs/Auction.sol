@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-struct LuckyDip {
+struct Auction {
     bool isPublished;
     string description;
     string symbol;
