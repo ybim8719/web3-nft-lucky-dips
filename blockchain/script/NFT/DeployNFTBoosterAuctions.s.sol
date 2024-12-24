@@ -67,11 +67,11 @@ contract DeployNFTBoosterAuctions is Script {
         vm.stopBroadcast();
     }
 
-    function populateAuctions() public {
+    function populateAuctions() internal {
         populateFromJson(msg.sender, auctionsFeed);
     }
 
-    function populateWithMockedAuctions(address caller) public {
+    function populateWithMockedAuctions(address caller) internal {
         populateFromJson(caller, mockedAuctionsFeed);
     }
 

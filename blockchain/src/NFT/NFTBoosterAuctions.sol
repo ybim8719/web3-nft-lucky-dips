@@ -32,10 +32,9 @@ contract NFTBoosterAuctions {
     error NFTBoosterAuctions__NoOneHasBid(uint256 index);
 
     /*//////////////////////////////////////////////////////////////
-                            Events
+                            EVENTS
     //////////////////////////////////////////////////////////////*/
     event NewBid(uint256 indexed AuctionIndex, address indexed bestBidder, uint256 indexed bid);
-
     /*//////////////////////////////////////////////////////////////
                             STATES
     //////////////////////////////////////////////////////////////*/
@@ -145,7 +144,7 @@ contract NFTBoosterAuctions {
     }
 
     /*//////////////////////////////////////////////////////////////
-                            GETTERS
+                            PURE/ VIEWS
     //////////////////////////////////////////////////////////////*/
     function isAunctionPublished(uint256 i) public view returns (bool) {
         return s_auctions[i].isPublished;

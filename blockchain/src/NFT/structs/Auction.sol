@@ -14,3 +14,6 @@ struct Auction {
     string[] nftImageUris;
 }
 // LATER add validaty duration in seconds
+
+// 7 days = 604 800
+// 10 days = 864 000
