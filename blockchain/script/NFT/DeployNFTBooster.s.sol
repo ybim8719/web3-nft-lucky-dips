@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.28;
 
 import {Script, console} from "forge-std/Script.sol";
 import {NFTBooster} from "../../src/NFT/NFTBooster.sol";
@@ -60,7 +60,7 @@ contract DeployNFTBooster is Script {
 
     function deploy() internal {
         vm.startBroadcast();
-        s_nftBooster = new NFTBooster();
+        // s_nftBooster = new NFTBooster();
         vm.stopBroadcast();
     }
 
