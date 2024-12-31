@@ -30,10 +30,10 @@ contract NFTBoosterAuctions {
     error NFTBoosterAuctions__UnsufficientFunds(uint256 amountToSend, uint256 currentBalance);
     error NFTBoosterAuctions__CantBidWhenAlreadyBestBidder(uint256 index);
     error NFTBoosterAuctions__NoOneHasBid(uint256 index);
-
     /*//////////////////////////////////////////////////////////////
                             EVENTS
     //////////////////////////////////////////////////////////////*/
+
     event NewBid(uint256 indexed AuctionIndex, address indexed bestBidder, uint256 indexed bid);
     /*//////////////////////////////////////////////////////////////
                             STATES

@@ -15,9 +15,15 @@ import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
  * @dev
  */
 contract NFTBooster is ERC721, Ownable {
+    /*//////////////////////////////////////////////////////////////
+                            ERRORS
+    //////////////////////////////////////////////////////////////*/
     error NFTBooster__TokenUriNotFound();
     error NFTBooster__MaxNbOfMintableNFTReached();
 
+    /*//////////////////////////////////////////////////////////////
+                            STATES
+    //////////////////////////////////////////////////////////////*/
     mapping(uint256 tokenId => string tokenUri) private s_tokenIdToUri;
     uint256 private s_tokenCounter;
     uint256 private s_maxNumberOfMintableNFT;
@@ -71,6 +77,9 @@ contract NFTBooster is ERC721, Ownable {
         );
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            VIEW/PURE
+    //////////////////////////////////////////////////////////////*/
     function getImageUri(uint256 tokenId) public view returns (string memory) {
         return s_tokenIdToUri[tokenId];
     }

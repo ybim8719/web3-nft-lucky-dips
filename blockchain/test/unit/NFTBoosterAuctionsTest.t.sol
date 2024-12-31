@@ -9,15 +9,16 @@ import {NFTBoosterAuctions} from "../../src/NFT/NFTBoosterAuctions.sol";
 import {DeployNFTBoosterAuctions} from "../../script/NFT/DeployNFTBoosterAuctions.s.sol";
 
 contract NFTBoosterAuctionsTest is Test {
-    /**
-     * USERS
-     */
+    /*//////////////////////////////////////////////////////////////
+                        ACCOUNTS
+    //////////////////////////////////////////////////////////////*/
     uint256 constant STARTING_BALANCE = 10 ether;
     address user1 = makeAddr("cochonou");
     address user2 = makeAddr("philippe");
-    /**
-     * DEFAULT MOCKED AUNCTION
-     */
+
+    /*//////////////////////////////////////////////////////////////
+                        DEFAULT MOCKED AUNCTION
+    //////////////////////////////////////////////////////////////*/
     string constant DEFAULT_MOCK_NAME = "JeanMiMock";
     uint256 constant DEFAULT_MOCK_STARTINGBID = 2500000000000000;
     uint256 constant DEFAULT_MOCK_BIDSTEP = 10000000000000;
@@ -27,9 +28,10 @@ contract NFTBoosterAuctionsTest is Test {
     uint256 constant DEFAULT_MOCK_IMAGE_URI_LENGTH = 4;
     uint256 constant DEFAULT_MOCK_NB_OF_AUCTIONS = 1;
     string constant DEFAULT_MOCK_DESCRIPTION = "A nice collection from Jean Michel Mock";
-    /**
-     * MOCKED AUNCTION TO ADD in test
-     */
+
+    /*//////////////////////////////////////////////////////////////
+                        MOCKED AUNCTION TO ADD in test
+    //////////////////////////////////////////////////////////////*/
     string constant ADDITIONNAL_MOCK_DESCRIPTION = "description of lucky Dip #2";
     string constant ADDITIONNAL_MOCK_NAME = "Mock2";
     string constant ADDITIONNAL_MOCK_SYMBOL = "MK2";
@@ -49,9 +51,9 @@ contract NFTBoosterAuctionsTest is Test {
         vm.deal(user2, STARTING_BALANCE);
     }
 
-    /**
-     * MODIFIERS
-     */
+    /*//////////////////////////////////////////////////////////////
+                            MODIFIERS
+    //////////////////////////////////////////////////////////////*/
     modifier bidIsOpen() {
         vm.prank(msg.sender);
         s_nftBoosterAuctions.openBid(0);
@@ -70,9 +72,9 @@ contract NFTBoosterAuctionsTest is Test {
         _;
     }
 
-    /**
-     * UNIT TESTS
-     */
+    /*//////////////////////////////////////////////////////////////
+                        UNIT TESTS
+    //////////////////////////////////////////////////////////////*/
     function testAunctionAddingWorks() public view {
         assertEq(s_nftBoosterAuctions.getAunctionNFTLength(0), DEFAULT_MOCK_IMAGE_URI_LENGTH);
         assertEq(s_nftBoosterAuctions.isAunctionPublished(0), false);
