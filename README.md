@@ -63,6 +63,8 @@ npm run dev
 
 ### Deployment on Sepolia (testnet)
 
+Some faucet would be needed 
+
 
 
 
