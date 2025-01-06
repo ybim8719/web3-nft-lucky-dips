@@ -5,11 +5,8 @@ pragma solidity ^0.8.28;
 import {Auction} from "./structs/Auction.sol";
 import {NFTBooster} from "./NFTBooster.sol";
 import {console} from "forge-std/Script.sol";
-
-// TODO FOR LATER
-// 1) Add a time interval which is validity duration in seconds of the bip.
-// 2) this interval has to be .... before any validation of winning bid
-// 3) add an oracle triggering service to execute automatically closure of Auction
+import {AutomationCompatibleInterface} from
+    "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 
 /**
  * @title NFTBoosterAuctions is a bid application of aunction selling the ownership of a set of nft designed by a unique artist (also called booster)
@@ -19,7 +16,7 @@ import {console} from "forge-std/Script.sol";
  * @notice After deployment of contract, a unlimited number of auction can be send by the owner of the contract
  * For more, follow instructions in the read me file or in the Contract script/DeployNFTBoosterAuction.s.sol
  */
-contract NFTBoosterAuctions {
+contract NFTBoosterAuctions is AutomationCompatibleInterface {
     /*//////////////////////////////////////////////////////////////
                             ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -109,6 +106,35 @@ contract NFTBoosterAuctions {
 
     function openBid(uint256 i) public ownerOnly {
         s_auctions[i].isPublished = true;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            ORACLE AUTOMATION
+    //////////////////////////////////////////////////////////////*/
+    /**
+     * @dev This is the function that the Chainlink Keeper nodes call (off chain operation)
+     * to look for `upkeepNeeded` to return True.
+     */
+    function checkUpkeep(bytes memory /* checkData */ )
+        public
+        view
+        override
+        returns (bool upkeepNeeded, bytes memory performData)
+    {
+        // TODO Check for timestamp > overdue + has at least one bidder.
+        // upkeepNeeded = (block.timestamp - s_lastTimeStamp) > INTERVAL;
+        // performData = abi.encode(s_counter);
+        // TODO if true, send back true and the index of the corresponding array.
+        // return (upkeepNeeded, performData);
+    }
+
+    /**
+     * @dev Once `checkUpkeep` is returning `true`, this function is called
+     * and it decodes "performData" and uses it to end the aunction
+     */
+    function performUpkeep(bytes calldata performData) external override {
+        // uint256 currentCounter = abi.decode(performData, (uint256));
+        // (bool upkeepNeeded,) = checkUpkeep("");
     }
 
     // for given aunction check avialbiliy duration and pick the winner, create the ERC721 contract and mint the related nfts

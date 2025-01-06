@@ -9,6 +9,12 @@ import {AutomationCompatibleInterface} from
  * @notice a very basic contract inheriting AutomationCompatibleInterface chainlink.
  * This contract is made for tests on sepolia.
  * Upkeep is registered to try the 2 main functions checkUpkeep and performUpkeep on chain, and to check if parameter "performData" is also passed between the two functions
+ * was deployed on sepolia at address : 0xF0EA0eD840c49d876833701B4E24C4dEA931F224
+ * test : the counter should increment with a +2 each hour$=
+ * use :
+ * cast call 0xF0EA0eD840c49d876833701B4E24C4dEA931F224 "getCounter()" --rpc-url $SEPOLIA_RPC_URL
+ *
+ *
  * @dev This implements the Chainlink VRF Version 2
  */
 contract TestUpkeep is AutomationCompatibleInterface {
@@ -33,8 +39,9 @@ contract TestUpkeep is AutomationCompatibleInterface {
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
-        bool timePassed = (block.timestamp - s_lastTimeStamp) > INTERVAL;
-        return (timePassed, abi.encode(s_counter));
+        upkeepNeeded = (block.timestamp - s_lastTimeStamp) > INTERVAL && s_counter < 40;
+        performData = abi.encode(s_counter + 1);
+        return (upkeepNeeded, performData);
     }
 
     /**
@@ -53,5 +60,9 @@ contract TestUpkeep is AutomationCompatibleInterface {
 
     function getLastTimeStamp() public view returns (uint256 lastTimeStamp) {
         return s_lastTimeStamp;
+    }
+
+    function getIntialTimeStamp() public view returns (uint256 lastTimeStamp) {
+        return i_initialTimeStamp;
     }
 }
