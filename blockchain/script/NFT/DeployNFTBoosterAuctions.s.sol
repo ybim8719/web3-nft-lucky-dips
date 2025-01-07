@@ -85,14 +85,15 @@ contract DeployNFTBoosterAuctions is Script {
                     )
                 );
             }
+
             vm.prank(caller);
             s_nftBoosterAuctions.addAuction(
                 auctionToAdd.description,
                 auctionToAdd.symbol,
                 auctionToAdd.name,
                 auctionToAdd.startingBid,
-                auctionToAdd.bidDuration,
                 auctionToAdd.bidStep,
+                auctionToAdd.bidDuration,
                 s_tmpImageUris
             );
         }

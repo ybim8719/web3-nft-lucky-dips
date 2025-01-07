@@ -13,7 +13,6 @@ You should therefore consider this project as a sandbox, even though the applica
 1. Clone this repository.
 2. Install Forge using the instructions found at [https://github.com/foundry-rs/foundry](https://github.com/foundry-rs/foundry).
 3. install npm 
-
 4. Run the following command to compile the contract:
 
 ```bash
@@ -34,7 +33,7 @@ forge test
 1. run Anvil (on a separate terminal): 
 
 ```bash 
-make anvil
+anvil
 ``` 
 
 2. Run the following command to deploy the contract to a test network:
@@ -61,12 +60,36 @@ npm install
 npm run dev
 ```
 
-### Deployment on Sepolia (testnet)
+## Deployment on Sepolia (testnet)
 
-Some faucet would be needed 
+```forge script script/DeployTestUpkeep.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --private-key $PRIVATE_KEY```
+
+=>
+
+``` source .env ```
+
+Some faucet ETH are needed for  
+
+## More about oracle automation :
+
+NFTBoosterAuctions contract implement Chainlink Automation functions.
+
+This service can be registered here : https://docs.chain.link/chainlink-automation/guides/register-upkeep
+
+And it offers logic-based triggering of upkeep functions which are in charge of 1/ checking if the expiry date of an auction (also called bid) has passed 2/ closing the related auction and handle the process of selling of nft for the buyer. 
+
+A test contract TestUpkeep.sol + script DeployTestUpkeep.s.sol were writen for testing purposes.
+
+Please note that registering to this service will cost Faucet ETH and LINK tokens. 
 
 
 
+## Launch front-end 
 
-### More about feeding 
+WIP
+
+
+## More about feeding 
+
+WIP
 

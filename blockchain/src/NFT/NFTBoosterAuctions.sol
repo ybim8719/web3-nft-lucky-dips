@@ -9,14 +9,14 @@ import {AutomationCompatibleInterface} from
     "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 
 /**
- * @title NFTBoosterAuctions is a bid application of aunction selling the ownership of a set of nft designed by a unique artist (also called booster)
+ * @notice NFTBoosterAuctions is a bid application of aunction selling the ownership of a set of nft designed by a unique artist (also called booster)
  * The artworks are hosted on chain, since they are svg files encoded on base 64. The particylarity of the auction is that the
  * pictures are only exposed when the final bid is achieved and final NFT contract deployed.
- * @author ybim
- * @notice After deployment of contract, a unlimited number of auction can be send by the owner of the contract
+ * After deployment of contract, a unlimited number of auctions can be send by the owner of the contract
  * For more, follow instructions in the read me file or in the Contract script/DeployNFTBoosterAuction.s.sol
- * @dev chainlink automation upkeep functions are implemented. Once the
- * Permits to trigger automatically the closure of a given aunction (based on logic)
+ * @author ybim
+ * @dev chainlink automation upkeep functions are implemented in the contract. Once the contract is deployed, logic-based triggering
+ * can be applied to handled the closure of a given aunction.
  */
 contract NFTBoosterAuctions is AutomationCompatibleInterface {
     /*//////////////////////////////////////////////////////////////
@@ -56,14 +56,10 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
     }
 
     modifier isBiddable(uint256 i) {
-        if (s_auctions[i].status != AuctionStatus.OPEN) {
+        if (s_auctions[i].status == AuctionStatus.READY) {
             revert NFTBoosterAuctions__BidNotOpenYet(i);
         }
-        // check if validty date is not expired and at least one bid was made
-        if (
-            block.timestamp - s_auctions[i].openingTimeStamp > s_auctions[i].bidDuration
-                && s_auctions[i].bestBidder != address(0)
-        ) {
+        if (s_auctions[i].status == AuctionStatus.CLOSED) {
             revert NFTBoosterAuctions__BidAlreadyAchieved(i);
         }
         // check if not already deployed
@@ -129,6 +125,9 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
         s_auctions[i].nextBidStep++;
         emit NewBid(i, msg.sender, msg.value);
     }
+
+    // TODO set status to cancelled
+    function cancelBid(uint256 i) public ownerOnly {}
 
     function openBid(uint256 i) public ownerOnly {
         if (s_auctions[i].status == AuctionStatus.READY && s_auctions[i].deployed == address(0)) {

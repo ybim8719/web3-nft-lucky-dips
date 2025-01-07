@@ -6,16 +6,12 @@ import {AutomationCompatibleInterface} from
 
 /**
  * @title TestUpkeep
- * @notice a very basic contract inheriting AutomationCompatibleInterface chainlink.
- * This contract is made for tests on sepolia.
+ * @notice a very basic contract inheriting AutomationCompatibleInterface for chainlink autmation tests on testnet.
  * Upkeep is registered to try the 2 main functions checkUpkeep and performUpkeep on chain, and to check if parameter "performData" is also passed between the two functions
  * was deployed on sepolia at address : 0xF0EA0eD840c49d876833701B4E24C4dEA931F224
- * test : the counter should increment with a +2 each hour$=
- * use :
- * cast call 0xF0EA0eD840c49d876833701B4E24C4dEA931F224 "getCounter()" --rpc-url $SEPOLIA_RPC_URL
- *
- *
- * @dev This implements the Chainlink VRF Version 2
+ * test : the counter should increment with a +2 each hour (until a maximum of 40)
+ * to call the counter state, use :cast call 0xF0EA0eD840c49d876833701B4E24C4dEA931F224 "getCounter()" --rpc-url $SEPOLIA_RPC_URL
+ * @dev use DeployTestUpkeep.s.sol to deploy this contract
  */
 contract TestUpkeep is AutomationCompatibleInterface {
     uint256 private constant INTERVAL = 3600;
@@ -29,9 +25,7 @@ contract TestUpkeep is AutomationCompatibleInterface {
     }
 
     /**
-     * @dev This is the function that the Chainlink Keeper nodes call
-     * It's an offchain computation.
-     * they look for `upkeepNeeded` to return True.
+     * @dev This is the function that the Chainlink Keeper nodes call.
      */
     function checkUpkeep(bytes memory /* checkData */ )
         public
@@ -46,14 +40,17 @@ contract TestUpkeep is AutomationCompatibleInterface {
 
     /**
      * @dev Once `checkUpkeep` is returning `true`, this function is called
-     * and it decodes "performData" and uses it for a state modification.
+     * and it decodes "performData" sent by the previous function and uses it for state modification.
+     * @notice to register an logic-based upkeep: https://docs.chain.link/chainlink-automation/guides/register-upkeep
      */
     function performUpkeep(bytes calldata performData) external override {
         uint256 currentCounter = abi.decode(performData, (uint256));
         s_counter = currentCounter + 1;
-        // (bool upkeepNeeded,) = checkUpkeep("");
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            GETTERS
+    //////////////////////////////////////////////////////////////*/
     function getCounter() public view returns (uint256 counter) {
         return s_counter;
     }

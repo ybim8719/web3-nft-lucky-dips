@@ -4,7 +4,8 @@ pragma solidity ^0.8.28;
 enum AuctionStatus {
     READY,
     OPEN,
-    CLOSED
+    CLOSED,
+    CANCELLED
 }
 
 struct Auction {
@@ -21,7 +22,3 @@ struct Auction {
     address deployed;
     string[] nftImageUris;
 }
-// LATER add validaty duration in seconds
-
-// 7 days = 604 800
-// 10 days = 864 000

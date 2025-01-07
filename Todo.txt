@@ -1,5 +1,4 @@
 
-[ ] Add notice for chainlink automation
 [ ] achieve unit tests for Aunctions (debug forked url, changes with duration and deployed Booster)
 
 [ ] Create deployment for Booster
