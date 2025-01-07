@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.28;
 
-import {Auction} from "./structs/Auction.sol";
+import {Auction, AuctionStatus} from "./structs/Auction.sol";
 import {NFTBooster} from "./NFTBooster.sol";
 import {console} from "forge-std/Script.sol";
 import {AutomationCompatibleInterface} from
@@ -15,34 +15,39 @@ import {AutomationCompatibleInterface} from
  * @author ybim
  * @notice After deployment of contract, a unlimited number of auction can be send by the owner of the contract
  * For more, follow instructions in the read me file or in the Contract script/DeployNFTBoosterAuction.s.sol
+ * @dev chainlink automation upkeep functions are implemented. Once the
+ * Permits to trigger automatically the closure of a given aunction (based on logic)
  */
 contract NFTBoosterAuctions is AutomationCompatibleInterface {
     /*//////////////////////////////////////////////////////////////
                             ERRORS
     //////////////////////////////////////////////////////////////*/
     error NFTBoosterAuctions__OwnerOnly();
+    error NFTBoosterAuctions__UpkeepNotNeeded();
     error NFTBoosterAuctions__InvalidBiddingAmount(address caller, uint256 sentValue);
     error NFTBoosterAuctions__BidAlreadyAchieved(uint256 index);
     error NFTBoosterAuctions__BidNotOpenYet(uint256 index);
+    error NFTBoosterAuctions__ExpiryDateNotReachedYet(uint256 index);
     error NFTBoosterAuctions__UnsufficientFunds(uint256 amountToSend, uint256 currentBalance);
     error NFTBoosterAuctions__CantBidWhenAlreadyBestBidder(uint256 index);
     error NFTBoosterAuctions__NoOneHasBid(uint256 index);
+
     /*//////////////////////////////////////////////////////////////
                             EVENTS
     //////////////////////////////////////////////////////////////*/
-
     event NewBid(uint256 indexed AuctionIndex, address indexed bestBidder, uint256 indexed bid);
+    event BidEnded(uint256 indexed AuctionIndex, address indexed bestBidder, uint256 indexed bid);
+
     /*//////////////////////////////////////////////////////////////
                             STATES
     //////////////////////////////////////////////////////////////*/
-
     address private i_owner;
     Auction[] private s_auctions;
     uint256 private constant MEMBERSHIP_FEE = 0.01 ether;
+
     /*//////////////////////////////////////////////////////////////
                             MODIFIERS
     //////////////////////////////////////////////////////////////*/
-
     modifier ownerOnly() {
         if (msg.sender != i_owner) {
             revert NFTBoosterAuctions__OwnerOnly();
@@ -51,8 +56,15 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
     }
 
     modifier isBiddable(uint256 i) {
-        if (s_auctions[i].isPublished == false) {
+        if (s_auctions[i].status != AuctionStatus.OPEN) {
             revert NFTBoosterAuctions__BidNotOpenYet(i);
+        }
+        // check if validty date is not expired and at least one bid was made
+        if (
+            block.timestamp - s_auctions[i].openingTimeStamp > s_auctions[i].bidDuration
+                && s_auctions[i].bestBidder != address(0)
+        ) {
+            revert NFTBoosterAuctions__BidAlreadyAchieved(i);
         }
         // check if not already deployed
         if (s_auctions[i].deployed != address(0)) {
@@ -71,10 +83,24 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
         string memory _name,
         uint256 _startingBid,
         uint256 _bidStep,
+        uint256 _bidDuration,
         string[] memory imageUris
     ) public ownerOnly {
         s_auctions.push(
-            Auction(false, _description, _symbol, _name, _startingBid, _bidStep, 0, address(0), address(0), imageUris)
+            Auction(
+                AuctionStatus.READY,
+                _description,
+                _symbol,
+                _name,
+                _startingBid,
+                _bidDuration,
+                0,
+                _bidStep,
+                0,
+                address(0),
+                address(0),
+                imageUris
+            )
         );
     }
 
@@ -105,7 +131,63 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
     }
 
     function openBid(uint256 i) public ownerOnly {
-        s_auctions[i].isPublished = true;
+        if (s_auctions[i].status == AuctionStatus.READY && s_auctions[i].deployed == address(0)) {
+            s_auctions[i].status = AuctionStatus.OPEN;
+            s_auctions[i].openingTimeStamp = block.timestamp;
+        } else {
+            revert NFTBoosterAuctions__BidAlreadyAchieved(i);
+        }
+    }
+
+    // for given auction do controls and pick the winner, create the ERC721 contract and mint the related nfts
+    function checkAndEndAuction(uint256 i) public ownerOnly {
+        // is open
+        if (s_auctions[i].status == AuctionStatus.READY) {
+            revert NFTBoosterAuctions__BidNotOpenYet(i);
+        }
+        // check if not already deployed
+        if (s_auctions[i].status == AuctionStatus.CLOSED) {
+            revert NFTBoosterAuctions__BidAlreadyAchieved(i);
+        }
+
+        // if no one has ever bid, keep the aunction open until somebody add a bid (despite expiry date)
+        if (getBestBidder(i) == address(0)) {
+            revert NFTBoosterAuctions__NoOneHasBid(i);
+        }
+        // has enougth time passed to close the aunction ?
+        if (block.timestamp - s_auctions[i].openingTimeStamp < s_auctions[i].bidDuration) {
+            revert NFTBoosterAuctions__ExpiryDateNotReachedYet(i);
+        }
+
+        endAuction(i);
+    }
+
+    function endAuction(uint256 i) internal {
+        address winner = getBestBidder(i);
+        // modif status to prevent reentrancy issues
+        s_auctions[i].status == AuctionStatus.CLOSED;
+        // create new NFT contract and store address
+        NFTBooster nftBooster = new NFTBooster(
+            getName(i),
+            getSymbol(i),
+            getAunctionDescription(i),
+            getCurrentBiddingPriceInWei(i),
+            getAunctionNFTLength(i),
+            winner
+        );
+        s_auctions[i].deployed = address(nftBooster);
+        // mint NFT one by one, by passing URI and bid winner
+        for (uint256 j = 0; j < getAunctionNFTLength(i); j++) {
+            nftBooster.mintNft(getAuctionNFT(i, j), winner);
+        }
+        // send the bid to the owner of this contract
+        uint256 finalBidAmout = getCurrentBiddingPriceInWei(i);
+        if (address(this).balance < finalBidAmout) {
+            revert NFTBoosterAuctions__UnsufficientFunds(finalBidAmout, address(this).balance);
+        }
+        (bool callSuccess,) = payable(i_owner).call{value: finalBidAmout}("");
+        require(callSuccess, "Call failed");
+        emit BidEnded(i, winner, finalBidAmout);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -121,59 +203,42 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
-        // TODO Check for timestamp > overdue + has at least one bidder.
-        // upkeepNeeded = (block.timestamp - s_lastTimeStamp) > INTERVAL;
-        // performData = abi.encode(s_counter);
-        // TODO if true, send back true and the index of the corresponding array.
-        // return (upkeepNeeded, performData);
+        for (uint256 i = 0; i < s_auctions.length;) {
+            if (
+                s_auctions[i].status == AuctionStatus.OPEN && getBestBidder(i) != address(0)
+                    && block.timestamp - s_auctions[i].openingTimeStamp > s_auctions[i].bidDuration
+            ) {
+                performData = abi.encode(i);
+                return (true, performData);
+            }
+
+            unchecked {
+                i++;
+            }
+        }
+        return (false, "");
     }
 
     /**
      * @dev Once `checkUpkeep` is returning `true`, this function is called
      * and it decodes "performData" and uses it to end the aunction
+     * @notice to register an logic-based upkeep: https://docs.chain.link/chainlink-automation/guides/register-upkeep
      */
     function performUpkeep(bytes calldata performData) external override {
-        // uint256 currentCounter = abi.decode(performData, (uint256));
-        // (bool upkeepNeeded,) = checkUpkeep("");
-    }
-
-    // for given aunction check avialbiliy duration and pick the winner, create the ERC721 contract and mint the related nfts
-    function endAuction(uint256 i) public ownerOnly isBiddable(i) {
-        address winner = getBestBidder(i);
-        if (winner == address(0)) {
-            // no one has ever bid
-            revert NFTBoosterAuctions__NoOneHasBid(i);
+        // recall the check once more to prevent any unappropriate calls (not made by chainlink)
+        (bool upkeepNeeded,) = checkUpkeep("");
+        if (!upkeepNeeded) {
+            revert NFTBoosterAuctions__UpkeepNotNeeded();
         }
-        // TODO LATER duration time has been passed
-        // create new NFT contract and store address
-        NFTBooster nftBooster = new NFTBooster(
-            getName(i),
-            getSymbol(i),
-            getAunctionDescription(i),
-            getCurrentBiddingPriceInWei(i),
-            getAunctionNFTLength(i),
-            winner
-        );
-        // store contract adress in aunction
-        s_auctions[i].deployed = address(nftBooster);
-        // mint NFT one by one, by passing URI and bid winner
-        for (uint256 j = 0; j < getAunctionNFTLength(i); j++) {
-            nftBooster.mintNft(getAuctionNFT(i, j), winner);
-        }
-        // send the bid to the owner of this contract
-        uint256 finalBidAmout = getCurrentBiddingPriceInWei(i);
-        if (address(this).balance < finalBidAmout) {
-            revert NFTBoosterAuctions__UnsufficientFunds(finalBidAmout, address(this).balance);
-        }
-        (bool callSuccess,) = payable(i_owner).call{value: finalBidAmout}("");
-        require(callSuccess, "Call failed");
+        uint256 index = abi.decode(performData, (uint256));
+        endAuction(index);
     }
 
     /*//////////////////////////////////////////////////////////////
                             PURE/ VIEWS
     //////////////////////////////////////////////////////////////*/
     function isAunctionPublished(uint256 i) public view returns (bool) {
-        return s_auctions[i].isPublished;
+        return s_auctions[i].status == AuctionStatus.OPEN;
     }
 
     function getName(uint256 i) public view returns (string memory) {

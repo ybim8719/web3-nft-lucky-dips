@@ -1,14 +1,13 @@
-[ ] Achieve contracts logic for Booster
-[ ] Add duration and chainlink trigger logic for Aunctions (trigering end of the aunction)
-[ ] Test automation
-[ ] Create deployment for Booster
-[ ] debut unit tests for fork url on sepolia -> aunctions 
-[ ] Makefile to achieve
+
+[ ] Add notice for chainlink automation
 [ ] achieve unit tests for Aunctions (debug forked url, changes with duration and deployed Booster)
+
+[ ] Create deployment for Booster
+[ ] Achieve contracts logic for Booster
 [ ] start unit tests for Booster
+
+[ ] Makefile to achieve
 [ ] add minimal front end (with ethers)
-[ ] Read me 
-[ ] Deploy a fake contract on sepolia in order to test upkeep functions  
 
 
 

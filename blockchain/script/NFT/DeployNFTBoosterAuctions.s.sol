@@ -17,6 +17,7 @@ contract DeployNFTBoosterAuctions is Script {
     using ConvertSvg for string;
 
     struct AuctionJson {
+        uint256 bidDuration;
         uint256 bidStep;
         string description;
         string name;
@@ -24,26 +25,18 @@ contract DeployNFTBoosterAuctions is Script {
         uint256 startingBid;
         string symbol;
     }
-    /**
-     * CONST
-     */
 
     string constant SVG_FOLDER_PATH = "./feed/img/";
-    /**
-     * STATES
-     */
     NFTBoosterAuctions s_nftBoosterAuctions;
     string[] s_tmpImageUris;
-    /**
-     * JSON FEED PATH
-     */
+
+    /*//////////////////////////////////////////////////////////////
+                            JSON FEED
+    //////////////////////////////////////////////////////////////*/
     string[] auctionsFeed =
         ["./feed/lucky-dip1.json", "./feed/lucky-dip2.json", "./feed/lucky-dip3.json", "./feed/lucky-dip4.json"];
     string[] mockedAuctionsFeed = ["./feed/mocked-luckydip1.json"];
 
-    /**
-     * ERROR
-     */
     error NftCollectionEmpty();
 
     function run() external returns (NFTBoosterAuctions) {
@@ -52,9 +45,9 @@ contract DeployNFTBoosterAuctions is Script {
         return s_nftBoosterAuctions;
     }
 
-    /**
-     * CALLED BY TEST Contract to deploy and feed contract with mocked data
-     */
+    /*//////////////////////////////////////////////////////////////
+     CALLED BY TEST Contract to deploy and feed contract with mocked data
+    //////////////////////////////////////////////////////////////*/
     function runMocked(address caller) external returns (NFTBoosterAuctions) {
         deploy();
         populateWithMockedAuctions(caller);
@@ -98,6 +91,7 @@ contract DeployNFTBoosterAuctions is Script {
                 auctionToAdd.symbol,
                 auctionToAdd.name,
                 auctionToAdd.startingBid,
+                auctionToAdd.bidDuration,
                 auctionToAdd.bidStep,
                 s_tmpImageUris
             );

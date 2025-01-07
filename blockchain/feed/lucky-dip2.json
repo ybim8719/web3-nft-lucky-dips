@@ -1,5 +1,6 @@
 {
     "bidStep": 100000000000000,
+    "bidDuration": 518400,
     "description": "Bankiz is a well-known street art artist who has created a number of iconic stencils that have been seen in Madrid's Lavapies district. It's paintings are focused on passion.",
     "name": "Banks",
     "nftCollection": [

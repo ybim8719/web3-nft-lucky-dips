@@ -1,5 +1,6 @@
 {
     "bidStep": 10000000000000,
+    "bidDuration": 259200,
     "description": "A nice collection from Jean Michel Mock",
     "name": "JeanMiMock",
     "nftCollection": [
