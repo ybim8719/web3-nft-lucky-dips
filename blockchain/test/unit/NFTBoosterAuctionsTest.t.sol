@@ -73,8 +73,16 @@ contract NFTBoosterAuctionsTest is Test {
         _;
     }
 
+    modifier skipFork() {
+        // anvil only
+        if (block.chainid != 31337) {
+            return;
+        }
+        _;
+    }
+
     /*//////////////////////////////////////////////////////////////
-                        UNIT TESTS
+                        ADD AUCTION
     //////////////////////////////////////////////////////////////*/
     function testAunctionAddingWorks() public view {
         assertEq(s_nftBoosterAuctions.getAunctionNFTLength(0), DEFAULT_MOCK_IMAGE_URI_LENGTH);
@@ -86,7 +94,7 @@ contract NFTBoosterAuctionsTest is Test {
             s_nftBoosterAuctions.getNextBiddingPriceInWei(0), (DEFAULT_MOCK_STARTINGBID + (0 * DEFAULT_MOCK_BIDSTEP))
         );
         // TODO encoding of svg seems to behave differently on each machine (base64 -i <path-to-svg-file>)
-        //assertEq(luckyDip.getAunctionNFT(0, 0), MOCK_LUCKY_DIP_IMAGE_URI1);
+        //assertEq(luckyDip.getAunctionNFT(0, 0), MOCK_IMAGE_URI1);
     }
 
     function testMemberCantAddAunction() public {
@@ -122,6 +130,9 @@ contract NFTBoosterAuctionsTest is Test {
         assertEq(s_nftBoosterAuctions.isAunctionPublished(1), false);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                     AUCTION OPENING
+    //////////////////////////////////////////////////////////////*/
     function testOwnerCanOpenBid() public {
         assertEq(s_nftBoosterAuctions.isAunctionPublished(0), false);
         vm.prank(msg.sender);
@@ -136,7 +147,7 @@ contract NFTBoosterAuctionsTest is Test {
         s_nftBoosterAuctions.openBid(0);
     }
 
-    function testCantBidOnClosedBid() public {
+    function testCantBidOnNotOpenBid() public {
         vm.startPrank(user1);
         // isolating this variable is mandatory because: https://ethereum.stackexchange.com/questions/158768/vm-expectrevert-is-not-working-as-expected-in-foundry
         uint256 sendValue = s_nftBoosterAuctions.getNextBiddingPriceInWei(0);
@@ -145,10 +156,11 @@ contract NFTBoosterAuctionsTest is Test {
         vm.stopPrank();
     }
 
+    /*//////////////////////////////////////////////////////////////
+                     BID ON AUCTION
+    //////////////////////////////////////////////////////////////*/
     function testCanBidWithvalidAmount() public bidIsOpen {
         vm.startPrank(user1);
-        console.log(s_nftBoosterAuctions.getNextBiddingPriceInWei(0));
-
         uint256 sendValue = s_nftBoosterAuctions.getNextBiddingPriceInWei(0);
         s_nftBoosterAuctions.bidForAuction{value: sendValue}(0);
         vm.stopPrank();
@@ -156,8 +168,6 @@ contract NFTBoosterAuctionsTest is Test {
             s_nftBoosterAuctions.getNextBiddingPriceInWei(0), (DEFAULT_MOCK_STARTINGBID + (1 * DEFAULT_MOCK_BIDSTEP))
         );
         assertEq(s_nftBoosterAuctions.getBestBidder(0), user1);
-        // TODO contract balance = sent value during bidding process
-        // user1 balance = 10000 - value
         assertEq(address(user1).balance, STARTING_BALANCE - sendValue);
         assertEq(address(s_nftBoosterAuctions).balance, sendValue);
     }
@@ -200,8 +210,19 @@ contract NFTBoosterAuctionsTest is Test {
 
     // todo : cant bid because of NFTLuckyDip__BidAlreadyAchieved
     function testCantBidOnAnEndedBid() public {}
+
+    /*//////////////////////////////////////////////////////////////
+                          BID ENDING
+    //////////////////////////////////////////////////////////////*/
     // todo: cant end bid because no one ever participated
     function testCantEndABidWithoutBidders() public {}
     // after bid ending new owner of Booster contract is best bidder + and has correct nb of nft.
     function testEndingABidWorks() public {}
+
+    /*//////////////////////////////////////////////////////////////
+                     UPKEEP BID ENDING
+    //////////////////////////////////////////////////////////////*/
+
+    // vm.warp(block.timestamp + automationUpdateInterval + 1);
+    // vm.roll(block.number + 1);
 }
