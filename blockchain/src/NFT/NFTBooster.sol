@@ -5,6 +5,7 @@ pragma solidity ^0.8.28;
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title
@@ -45,12 +46,12 @@ contract NFTBooster is ERC721, Ownable {
     }
 
     function mintNft(string memory tokenUri, address owner) public onlyOwner {
-        if (s_maxNumberOfMintableNFT == s_tokenCounter + 1) {
+        if (s_tokenCounter == s_maxNumberOfMintableNFT) {
             revert NFTBooster__MaxNbOfMintableNFTReached();
         }
         s_tokenIdToUri[s_tokenCounter] = tokenUri;
-        _safeMint(owner, s_tokenCounter);
         s_tokenCounter = s_tokenCounter + 1;
+        _safeMint(owner, s_tokenCounter);
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -98,5 +99,9 @@ contract NFTBooster is ERC721, Ownable {
 
     function getFinalBid() public view returns (uint256) {
         return s_finalBid;
+    }
+
+    function getOwner() public view returns (address) {
+        return owner();
     }
 }

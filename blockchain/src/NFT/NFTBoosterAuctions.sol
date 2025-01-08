@@ -121,18 +121,19 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
 
         // store previous bidder info for payback
         address prevBidder = s_auctions[i].bestBidder;
-        uint256 prevBestAmount = s_auctions[i].startingBid + (s_auctions[i].bidStep * (s_auctions[i].nextBidStep - 1));
+        uint256 prevBidStep = s_auctions[i].nextBidStep;
         //EFFECTS
         s_auctions[i].bestBidder = msg.sender;
         s_auctions[i].nextBidStep++;
 
         // INTERACTIONS : payback money to previous bidder.
         if (prevBidder != address(0)) {
+            uint256 prevBestAmount = s_auctions[i].startingBid + (prevBidStep * (prevBidStep - 1));
             // then check contract balance
             if (address(this).balance < prevBestAmount) {
                 revert NFTBoosterAuctions__UnsufficientFunds(prevBestAmount, address(this).balance);
             }
-            (bool callSuccess,) = payable(s_auctions[i].bestBidder).call{value: prevBestAmount}("");
+            (bool callSuccess,) = payable(prevBidder).call{value: prevBestAmount}("");
             require(callSuccess, "Call failed");
         }
         emit NewBid(i, msg.sender, msg.value);
@@ -160,28 +161,30 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
         address winner = getBestBidder(i);
         // modif status to prevent reentrancy issues
         s_auctions[i].status == AuctionStatus.CLOSED;
-        // create new NFT contract and store address
+        // create new NFT contract , this contract is the temp owner
         NFTBooster nftBooster = new NFTBooster(
             getName(i),
             getSymbol(i),
             getAunctionDescription(i),
             getCurrentBiddingPriceInWei(i),
             getAunctionNFTLength(i),
-            winner
+            address(this)
         );
         s_auctions[i].deployed = address(nftBooster);
-        // mint NFT one by one, by passing URI and bid winner
+        // mint NFT one by one, by passing URI and bid winner, operation made by msg.sender
         for (uint256 j = 0; j < getAunctionNFTLength(i); j++) {
             nftBooster.mintNft(getAuctionNFT(i, j), winner);
         }
-        // send the bid to the owner of this contract
-        uint256 finalBidAmout = getCurrentBiddingPriceInWei(i);
-        if (address(this).balance < finalBidAmout) {
-            revert NFTBoosterAuctions__UnsufficientFunds(finalBidAmout, address(this).balance);
+        // transfer contract ownership to winner
+        nftBooster.transferOwnership(winner);
+        // send the final bidding amount
+        uint256 finalBidAmount = getCurrentBiddingPriceInWei(i);
+        if (address(this).balance < finalBidAmount) {
+            revert NFTBoosterAuctions__UnsufficientFunds(finalBidAmount, address(this).balance);
         }
-        (bool callSuccess,) = payable(i_owner).call{value: finalBidAmout}("");
+        (bool callSuccess,) = payable(i_owner).call{value: finalBidAmount}("");
         require(callSuccess, "Call failed");
-        emit BidEnded(i, winner, finalBidAmout);
+        emit BidEnded(i, winner, finalBidAmount);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -287,5 +290,9 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
 
     function getBestBidder(uint256 i) public view returns (address) {
         return s_auctions[i].bestBidder;
+    }
+
+    function getDeployed(uint256 i) public view returns (address) {
+        return s_auctions[i].deployed;
     }
 }
