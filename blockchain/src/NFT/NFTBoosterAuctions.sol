@@ -56,13 +56,14 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
     }
 
     modifier isBiddable(uint256 i) {
-        if (s_auctions[i].status != AuctionStatus.OPEN) {
-            revert NFTBoosterAuctions__BidNotOpen(i);
-        }
         // check if not already deployed
         if (s_auctions[i].deployed != address(0)) {
             revert NFTBoosterAuctions__BidAlreadyAchieved(i);
         }
+        if (s_auctions[i].status != AuctionStatus.OPEN) {
+            revert NFTBoosterAuctions__BidNotOpen(i);
+        }
+
         _;
     }
 
@@ -150,7 +151,7 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
             revert NFTBoosterAuctions__NoOneHasBid(i);
         }
         // has enougth time passed to close the aunction ?
-        if (hasDurationDatePassed(i)) {
+        if (hasDurationDatePassed(i) == false) {
             revert NFTBoosterAuctions__ExpiryDateNotReachedYet(i);
         }
 
@@ -160,7 +161,7 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
     function endAuction(uint256 i) internal {
         address winner = getBestBidder(i);
         // modif status to prevent reentrancy issues
-        s_auctions[i].status == AuctionStatus.CLOSED;
+        s_auctions[i].status = AuctionStatus.CLOSED;
         // create new NFT contract , this contract is the temp owner
         NFTBooster nftBooster = new NFTBooster(
             getName(i),
@@ -201,6 +202,9 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
         returns (bool upkeepNeeded, bytes memory performData)
     {
         for (uint256 i = 0; i < s_auctions.length;) {
+            console.log(
+                s_auctions[i].status == AuctionStatus.OPEN, getBestBidder(i) != address(0), hasDurationDatePassed(i)
+            );
             if (
                 s_auctions[i].status == AuctionStatus.OPEN && getBestBidder(i) != address(0) && hasDurationDatePassed(i)
             ) {
@@ -233,7 +237,7 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
                             PURE/ VIEWS
     //////////////////////////////////////////////////////////////*/
     function hasDurationDatePassed(uint256 i) internal view returns (bool) {
-        return block.timestamp - s_auctions[i].openingTimeStamp < s_auctions[i].bidDuration;
+        return block.timestamp - s_auctions[i].openingTimeStamp > s_auctions[i].bidDuration;
     }
 
     function getStatus(uint256 i) public view returns (AuctionStatus) {

@@ -2,9 +2,11 @@
 
 pragma solidity ^0.8.28;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
+import {console} from "forge-std/Script.sol";
+
 import {Vm} from "forge-std/Vm.sol";
-import {Auction} from "../../src/NFT/structs/Auction.sol";
+import {Auction, AuctionStatus} from "../../src/NFT/structs/Auction.sol";
 import {NFTBoosterAuctions} from "../../src/NFT/NFTBoosterAuctions.sol";
 import {NFTBooster} from "../../src/NFT/NFTBooster.sol";
 import {DeployNFTBoosterAuctions} from "../../script/NFT/DeployNFTBoosterAuctions.s.sol";
@@ -94,14 +96,13 @@ contract NFTBoosterAuctionsTest is Test {
         );
         vm.stopPrank();
         assertEq(s_nftBoosterAuctions.getBestBidder(DEFAULT_MOCK_INDEX), user1);
-        vm.warp(block.timestamp + DEFAULT_MOCK_BID_DURATION + 100);
+        vm.warp(block.timestamp + DEFAULT_MOCK_BID_DURATION + 1);
         vm.roll(block.number + 1);
-        vm.startPrank(msg.sender);
+        vm.prank(msg.sender);
         s_nftBoosterAuctions.checkAndEndAuction(DEFAULT_MOCK_INDEX);
-        vm.stopPrank();
+        AuctionStatus truc = s_nftBoosterAuctions.getStatus(0);
         address deployed = s_nftBoosterAuctions.getDeployed(DEFAULT_MOCK_INDEX);
         s_nftBooster = NFTBooster(deployed);
-
         _;
     }
 
@@ -181,7 +182,6 @@ contract NFTBoosterAuctionsTest is Test {
         s_nftBoosterAuctions.openBid(DEFAULT_MOCK_INDEX);
     }
 
-    // TODO relou mais à faire avec un modifier already deployed
     function testCantOpenBidIfAlreadyDeployed() public initialBidEnded {
         vm.prank(msg.sender);
         vm.expectRevert();
@@ -253,8 +253,18 @@ contract NFTBoosterAuctionsTest is Test {
         vm.stopPrank();
     }
 
-    // TODO relou mais à faire avec un modifier already deployed
-    //function testCantBidIfAlreadyDeployed() public {}
+    function testCantBidIfAlreadyDeployed() public initialBidEnded {
+        vm.startPrank(user1);
+        // isolating this variable is mandatory because: https://ethereum.stackexchange.com/questions/158768/vm-expectrevert-is-not-working-as-expected-in-foundry
+        uint256 sendValue = s_nftBoosterAuctions.getNextBiddingPriceInWei(DEFAULT_MOCK_INDEX);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                NFTBoosterAuctions.NFTBoosterAuctions__BidAlreadyAchieved.selector, DEFAULT_MOCK_INDEX
+            )
+        );
+        s_nftBoosterAuctions.bidForAuction{value: sendValue}(DEFAULT_MOCK_INDEX);
+        vm.stopPrank();
+    }
 
     /*//////////////////////////////////////////////////////////////
                         CHECK AND END BID (by owner)
@@ -262,36 +272,100 @@ contract NFTBoosterAuctionsTest is Test {
     // TODO si tout marche ! Tester nouveau contrat NFT (propriété, nombre de NFR, symbol, titre etc... + owner got the money of the sale)
     // after bid ending new owner of Booster contract is best bidder + and has correct nb of nft.
     //function testEndingABidWorks() public {}
-    // TODO
-    //function testCantEndABidIfNotOpen() public {}
-    // TODO
-    //function testCantEndBidIfNotOwner() public {}
+
+    function testCantEndABidIfNotOpen() public {
+        vm.prank(msg.sender);
+        vm.expectRevert(
+            abi.encodeWithSelector(NFTBoosterAuctions.NFTBoosterAuctions__BidNotOpen.selector, DEFAULT_MOCK_INDEX)
+        );
+        s_nftBoosterAuctions.checkAndEndAuction(DEFAULT_MOCK_INDEX);
+    }
+
+    function testCantEndBidIfNotOwner() public oneBidWasMadeByUser1 {
+        vm.warp(block.timestamp + DEFAULT_MOCK_BID_DURATION + 1);
+        vm.roll(block.number + 1);
+        vm.prank(user1);
+        vm.expectRevert(NFTBoosterAuctions.NFTBoosterAuctions__OwnerOnly.selector);
+        s_nftBoosterAuctions.checkAndEndAuction(DEFAULT_MOCK_INDEX);
+    }
+
     // todo: cant end bid because no one ever participated
-    //function testCantEndABidWithoutBidders() public {}
-    // TODO : can't bid if expiry date not passed.
-    //function testCantEndABidIfDurationTimeNotPassed() public {}
+    function testCantEndABidWithoutBidders() public initialBidIsOpen {
+        vm.warp(block.timestamp + DEFAULT_MOCK_BID_DURATION + 1);
+        vm.roll(block.number + 1);
+        vm.prank(msg.sender);
+        vm.expectRevert(
+            abi.encodeWithSelector(NFTBoosterAuctions.NFTBoosterAuctions__NoOneHasBid.selector, DEFAULT_MOCK_INDEX)
+        );
+        s_nftBoosterAuctions.checkAndEndAuction(DEFAULT_MOCK_INDEX);
+    }
+
+    function testCantEndABidIfDurationTimeNotPassed() public oneBidWasMadeByUser1 {
+        vm.prank(msg.sender);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                NFTBoosterAuctions.NFTBoosterAuctions__ExpiryDateNotReachedYet.selector, DEFAULT_MOCK_INDEX
+            )
+        );
+        s_nftBoosterAuctions.checkAndEndAuction(DEFAULT_MOCK_INDEX);
+    }
 
     /*//////////////////////////////////////////////////////////////
                             CHECK UPKEEP 
     //////////////////////////////////////////////////////////////*/
-    // TODO Sent value is abi.decode(index 0)
-    //function testCheckUpkeepReturnsTrue() public {}
-    // TODO Upkeep not needed
-    //function testCheckUpkeepReturnsFalseIfNotOpen() public {}
-    // TODO
-    //function testCheckUpkeepReturnsFalseIfDurationTimeNotPassed() public {}
-    // TODO
-    //function testCheckUpkeepReturnsFalseIfNotBidders() public {}
+    function testCheckUpkeepReturnsTrue() public oneBidWasMadeByUser1 {
+        vm.warp(block.timestamp + DEFAULT_MOCK_BID_DURATION + 1);
+        vm.roll(block.number + 1);
+        vm.prank(msg.sender);
+        (bool upkeepNeeded, bytes memory indexToEnd) = s_nftBoosterAuctions.checkUpkeep("");
+        assertEq(upkeepNeeded, true);
+        uint256 decodedIndex = abi.decode(indexToEnd, (uint256));
+        assertEq(decodedIndex, DEFAULT_MOCK_INDEX);
+    }
+
+    function testCheckUpkeepReturnsFalseIfNotOpen() public initialBidEnded {
+        vm.prank(user1);
+        (bool upkeepNeeded,) = s_nftBoosterAuctions.checkUpkeep("");
+        assertEq(upkeepNeeded, false);
+    }
+
+    function testCheckUpkeepReturnsFalseIfDurationTimeNotPassed() public oneBidWasMadeByUser1 {
+        vm.prank(user1);
+        (bool upkeepNeeded,) = s_nftBoosterAuctions.checkUpkeep("");
+        assertEq(upkeepNeeded, false);
+    }
+
+    function testCheckUpkeepReturnsFalseIfNotBidders() public initialBidIsOpen {
+        vm.warp(block.timestamp + DEFAULT_MOCK_BID_DURATION + 1);
+        vm.roll(block.number + 1);
+        vm.prank(user1);
+        (bool upkeepNeeded,) = s_nftBoosterAuctions.checkUpkeep("");
+        assertEq(upkeepNeeded, false);
+    }
 
     /*//////////////////////////////////////////////////////////////
                             PERFORM UPKEEP 
     //////////////////////////////////////////////////////////////*/
     // TODO
     //function testPerformWorks() public {}
-    // TODO
-    //function testPerformRevertIfDurationTimeNotPassed() public {}
-    // TODO
-    //function testPerformRevertIfNotBidders() public {}
-    // TODO
-    //function testPerformRevertIfNotOpen() public {}
+
+    function testPerformRevertIfDurationTimeNotPassed() public oneBidWasMadeByUser1 {
+        vm.prank(user1);
+        vm.expectRevert(NFTBoosterAuctions.NFTBoosterAuctions__UpkeepNotNeeded.selector);
+        s_nftBoosterAuctions.performUpkeep(abi.encode(DEFAULT_MOCK_INDEX));
+    }
+
+    function testPerformRevertIfNotBidders() public initialBidIsOpen {
+        vm.warp(block.timestamp + DEFAULT_MOCK_BID_DURATION + 1);
+        vm.roll(block.number + 1);
+        vm.prank(user1);
+        vm.expectRevert(NFTBoosterAuctions.NFTBoosterAuctions__UpkeepNotNeeded.selector);
+        s_nftBoosterAuctions.performUpkeep(abi.encode(DEFAULT_MOCK_INDEX));
+    }
+
+    function testPerformRevertIfNotOpen() public {
+        vm.prank(user1);
+        vm.expectRevert(NFTBoosterAuctions.NFTBoosterAuctions__UpkeepNotNeeded.selector);
+        s_nftBoosterAuctions.performUpkeep(abi.encode(DEFAULT_MOCK_INDEX));
+    }
 }
