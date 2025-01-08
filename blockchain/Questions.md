@@ -1,0 +1,1 @@
+## 1) How can we unit tests some cases like : contract must payback to user but has unsufficient funds ?

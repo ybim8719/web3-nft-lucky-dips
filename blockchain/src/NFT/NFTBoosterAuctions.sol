@@ -26,7 +26,7 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
     error NFTBoosterAuctions__UpkeepNotNeeded();
     error NFTBoosterAuctions__InvalidBiddingAmount(address caller, uint256 sentValue);
     error NFTBoosterAuctions__BidAlreadyAchieved(uint256 index);
-    error NFTBoosterAuctions__BidNotOpenYet(uint256 index);
+    error NFTBoosterAuctions__BidNotOpen(uint256 index);
     error NFTBoosterAuctions__ExpiryDateNotReachedYet(uint256 index);
     error NFTBoosterAuctions__UnsufficientFunds(uint256 amountToSend, uint256 currentBalance);
     error NFTBoosterAuctions__CantBidWhenAlreadyBestBidder(uint256 index);
@@ -56,11 +56,8 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
     }
 
     modifier isBiddable(uint256 i) {
-        if (s_auctions[i].status == AuctionStatus.READY) {
-            revert NFTBoosterAuctions__BidNotOpenYet(i);
-        }
-        if (s_auctions[i].status == AuctionStatus.CLOSED) {
-            revert NFTBoosterAuctions__BidAlreadyAchieved(i);
+        if (s_auctions[i].status != AuctionStatus.OPEN) {
+            revert NFTBoosterAuctions__BidNotOpen(i);
         }
         // check if not already deployed
         if (s_auctions[i].deployed != address(0)) {
@@ -101,7 +98,7 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
     }
 
     function bidForAuction(uint256 i) public payable isBiddable(i) {
-        //check if previous isn't the same as msg.sender
+        //CHECK if previous isn't the same as msg.sender
         if (msg.sender == s_auctions[i].bestBidder) {
             revert NFTBoosterAuctions__CantBidWhenAlreadyBestBidder(i);
         }
@@ -110,19 +107,22 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
             revert NFTBoosterAuctions__InvalidBiddingAmount(msg.sender, msg.value);
         }
 
-        // Check if it has a previous bidder.
-        if (s_auctions[i].bestBidder != address(0)) {
-            uint256 prevBid = s_auctions[i].startingBid + (s_auctions[i].bidStep * (s_auctions[i].nextBidStep - 1));
-            // then check contract balance
-            if (address(this).balance < prevBid) {
-                revert NFTBoosterAuctions__UnsufficientFunds(prevBid, address(this).balance);
-            }
-            // send back the previous bid amount to prev bidder
-            (bool callSuccess,) = payable(s_auctions[i].bestBidder).call{value: prevBid}("");
-            require(callSuccess, "Call failed");
-        }
+        // store previous bidder info for payback
+        address prevBidder = s_auctions[i].bestBidder;
+        uint256 prevBestAmount = s_auctions[i].startingBid + (s_auctions[i].bidStep * (s_auctions[i].nextBidStep - 1));
+        //EFFECTS
         s_auctions[i].bestBidder = msg.sender;
         s_auctions[i].nextBidStep++;
+
+        // INTERACTIONS : payback money to previous bidder.
+        if (prevBidder != address(0)) {
+            // then check contract balance
+            if (address(this).balance < prevBestAmount) {
+                revert NFTBoosterAuctions__UnsufficientFunds(prevBestAmount, address(this).balance);
+            }
+            (bool callSuccess,) = payable(s_auctions[i].bestBidder).call{value: prevBestAmount}("");
+            require(callSuccess, "Call failed");
+        }
         emit NewBid(i, msg.sender, msg.value);
     }
 
@@ -141,20 +141,15 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
     // for given auction do controls and pick the winner, create the ERC721 contract and mint the related nfts
     function checkAndEndAuction(uint256 i) public ownerOnly {
         // is open
-        if (s_auctions[i].status == AuctionStatus.READY) {
-            revert NFTBoosterAuctions__BidNotOpenYet(i);
+        if (s_auctions[i].status != AuctionStatus.OPEN) {
+            revert NFTBoosterAuctions__BidNotOpen(i);
         }
-        // check if not already deployed
-        if (s_auctions[i].status == AuctionStatus.CLOSED) {
-            revert NFTBoosterAuctions__BidAlreadyAchieved(i);
-        }
-
         // if no one has ever bid, keep the aunction open until somebody add a bid (despite expiry date)
         if (getBestBidder(i) == address(0)) {
             revert NFTBoosterAuctions__NoOneHasBid(i);
         }
         // has enougth time passed to close the aunction ?
-        if (block.timestamp - s_auctions[i].openingTimeStamp < s_auctions[i].bidDuration) {
+        if (hasDurationDatePassed(i)) {
             revert NFTBoosterAuctions__ExpiryDateNotReachedYet(i);
         }
 
@@ -194,7 +189,7 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
     //////////////////////////////////////////////////////////////*/
     /**
      * @dev This is the function that the Chainlink Keeper nodes call (off chain operation)
-     * to look for `upkeepNeeded` to return True.
+     * to look for `upkeepNeeded` to return true.
      */
     function checkUpkeep(bytes memory /* checkData */ )
         public
@@ -204,13 +199,11 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
     {
         for (uint256 i = 0; i < s_auctions.length;) {
             if (
-                s_auctions[i].status == AuctionStatus.OPEN && getBestBidder(i) != address(0)
-                    && block.timestamp - s_auctions[i].openingTimeStamp > s_auctions[i].bidDuration
+                s_auctions[i].status == AuctionStatus.OPEN && getBestBidder(i) != address(0) && hasDurationDatePassed(i)
             ) {
                 performData = abi.encode(i);
                 return (true, performData);
             }
-
             unchecked {
                 i++;
             }
@@ -236,6 +229,18 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
     /*//////////////////////////////////////////////////////////////
                             PURE/ VIEWS
     //////////////////////////////////////////////////////////////*/
+    function hasDurationDatePassed(uint256 i) internal view returns (bool) {
+        return block.timestamp - s_auctions[i].openingTimeStamp < s_auctions[i].bidDuration;
+    }
+
+    function getStatus(uint256 i) public view returns (AuctionStatus) {
+        return s_auctions[i].status;
+    }
+
+    function getBidDuration(uint256 i) public view returns (uint256) {
+        return s_auctions[i].bidDuration;
+    }
+
     function isAunctionPublished(uint256 i) public view returns (bool) {
         return s_auctions[i].status == AuctionStatus.OPEN;
     }
