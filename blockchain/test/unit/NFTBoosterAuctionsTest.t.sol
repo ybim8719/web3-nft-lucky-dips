@@ -100,7 +100,6 @@ contract NFTBoosterAuctionsTest is Test {
         vm.roll(block.number + 1);
         vm.prank(msg.sender);
         s_nftBoosterAuctions.checkAndEndAuction(DEFAULT_MOCK_INDEX);
-        AuctionStatus truc = s_nftBoosterAuctions.getStatus(0);
         address deployed = s_nftBoosterAuctions.getDeployed(DEFAULT_MOCK_INDEX);
         s_nftBooster = NFTBooster(deployed);
         _;
@@ -269,9 +268,9 @@ contract NFTBoosterAuctionsTest is Test {
     /*//////////////////////////////////////////////////////////////
                         CHECK AND END BID (by owner)
     //////////////////////////////////////////////////////////////*/
-    // TODO si tout marche ! Tester nouveau contrat NFT (propriété, nombre de NFR, symbol, titre etc... + owner got the money of the sale)
-    // after bid ending new owner of Booster contract is best bidder + and has correct nb of nft.
-    //function testEndingABidWorks() public {}
+    function testEndingABidWorks() public initialBidEnded {
+        testBidEndingWorksTotally();
+    }
 
     function testCantEndABidIfNotOpen() public {
         vm.prank(msg.sender);
@@ -346,8 +345,16 @@ contract NFTBoosterAuctionsTest is Test {
     /*//////////////////////////////////////////////////////////////
                             PERFORM UPKEEP 
     //////////////////////////////////////////////////////////////*/
-    // TODO
-    //function testPerformWorks() public {}
+    function testPerformWorks() public oneBidWasMadeByUser1 {
+        vm.warp(block.timestamp + DEFAULT_MOCK_BID_DURATION + 1);
+        vm.roll(block.number + 1);
+        vm.prank(user1);
+        vm.expectRevert(NFTBoosterAuctions.NFTBoosterAuctions__UpkeepNotNeeded.selector);
+        s_nftBoosterAuctions.performUpkeep(abi.encode(DEFAULT_MOCK_INDEX));
+        address deployed = s_nftBoosterAuctions.getDeployed(DEFAULT_MOCK_INDEX);
+        s_nftBooster = NFTBooster(deployed);
+        testBidEndingWorksTotally();
+    }
 
     function testPerformRevertIfDurationTimeNotPassed() public oneBidWasMadeByUser1 {
         vm.prank(user1);
@@ -367,5 +374,24 @@ contract NFTBoosterAuctionsTest is Test {
         vm.prank(user1);
         vm.expectRevert(NFTBoosterAuctions.NFTBoosterAuctions__UpkeepNotNeeded.selector);
         s_nftBoosterAuctions.performUpkeep(abi.encode(DEFAULT_MOCK_INDEX));
+    }
+
+    function testBidEndingWorksTotally() private view {
+        assertEq(s_nftBoosterAuctions.getDeployed(DEFAULT_MOCK_INDEX) != address(0), true);
+        assertEq(s_nftBoosterAuctions.getStatus(DEFAULT_MOCK_INDEX) == AuctionStatus.CLOSED, true);
+        assertEq(
+            keccak256(abi.encodePacked(s_nftBooster.getDescription()))
+                == keccak256(abi.encodePacked(DEFAULT_MOCK_DESCRIPTION)),
+            true
+        );
+        // nft contract symbol
+        // nft contract name
+        // nft desc
+        // current bidding piceIn wei
+        // NFT length
+        // user1 Is owner of each NFT
+
+        // money of bid sent to owner
+        // contract money = 0
     }
 }
