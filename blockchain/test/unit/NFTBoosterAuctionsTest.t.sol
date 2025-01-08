@@ -6,6 +6,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {Auction} from "../../src/NFT/structs/Auction.sol";
 import {NFTBoosterAuctions} from "../../src/NFT/NFTBoosterAuctions.sol";
+import {NFTBooster} from "../../src/NFT/NFTBooster.sol";
 import {DeployNFTBoosterAuctions} from "../../script/NFT/DeployNFTBoosterAuctions.s.sol";
 
 contract NFTBoosterAuctionsTest is Test {
@@ -13,7 +14,7 @@ contract NFTBoosterAuctionsTest is Test {
                         ACCOUNTS
     //////////////////////////////////////////////////////////////*/
     uint256 constant STARTING_BALANCE = 10 ether;
-    address user1 = makeAddr("cochonou");
+    address user1 = makeAddr("jeanmi");
     address user2 = makeAddr("philippe");
 
     /*//////////////////////////////////////////////////////////////
@@ -23,13 +24,13 @@ contract NFTBoosterAuctionsTest is Test {
     uint256 constant DEFAULT_MOCK_STARTINGBID = 2500000000000000; // 2.5e15 wei or / 0.0025eth
     uint256 constant DEFAULT_MOCK_BIDSTEP = 10000000000000;
     uint256 constant DEFAULT_MOCK_BID_DURATION = 259200;
-
+    uint256 constant DEFAULT_MOCK_IMAGE_URI_LENGTH = 4;
+    uint256 constant DEFAULT_MOCK_NB_OF_AUCTIONS = 1;
+    uint256 constant DEFAULT_MOCK_INDEX = 0;
+    string constant DEFAULT_MOCK_DESCRIPTION = "A nice collection from Jean Michel Mock";
     // svg encoded on CLI
     string constant MOCK_IMAGE_URI1 =
         "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PgoKPCEtLSBVcGxvYWRlZCB0bzogU1ZHIFJlcG8sIHd3dy5zdmdyZXBvLmNvbSwgR2VuZXJhdG9yOiBTVkcgUmVwbyBNaXhlciBUb29scyAtLT4KPHN2ZyBmaWxsPSIjMDAwMDAwIiB3aWR0aD0iODAwcHgiIGhlaWdodD0iODAwcHgiIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiB2ZXJzaW9uPSIxLjEiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgoKPGcgaWQ9ImdpZnRfYm94LWJveF8taGVhcnQtbG92ZS12YWxlbnRpbmUiPgoKPHBhdGggZD0iTTQwOCwxNjBoLTY0YzE1LjU1LTAuMDIxLDI4LjQ4My0xMi43MTksMjguNTA0LTI4LjI2OWMwLjAyMS0xNS41NS0xMi41NjgtMjguMTM5LTI4LjExOC0yOC4xMTggICBjMC4wMjMtMTcuNDg2LTE1LjktMzEuMjI4LTM0LjA0OC0yNy41MDRDMjk3LjEyNCw3OC44MiwyODgsOTEuMDg1LDI4OCwxMDQuNTc1djUuNjY3Yy00LjI1Ni0zLjgzOC05LjgzMS02LjI0Mi0xNi02LjI0MmgtMzIgICBjLTYuMTY5LDAtMTEuNzQ0LDIuNDA0LTE2LDYuMjQydi01LjY2N2MwLTEzLjQ5MS05LjEyNC0yNS43NTUtMjIuMzM5LTI4LjQ2N2MtMTguMTQ4LTMuNzI0LTM0LjA3MSwxMC4wMTgtMzQuMDQ4LDI3LjUwNCAgIGMtMTUuNTQ5LTAuMDIxLTI4LjEzOCwxMi41NjgtMjguMTE4LDI4LjExOEMxMzkuNTE3LDE0Ny4yODEsMTUyLjQ1LDE1OS45NzksMTY4LDE2MGgtNjRjLTE3LjY3MywwLTMyLDE0LjMyNy0zMiwzMnY4ICAgYzAsMTcuNjczLDE0LjMyNywzMiwzMiwzMmg5NnYxNkg5NnYxNjEuMjhjMCwxNi45NjYsMTMuNzU0LDMwLjcyLDMwLjcyLDMwLjcySDIwMGM4LjgzNywwLDE2LTcuMTYzLDE2LTE2VjE2OGg4MHYyNTYgICBjMCw4LjgzNyw3LjE2MywxNiwxNiwxNmg3My4yOGMxNi45NjYsMCwzMC43Mi0xMy43NTQsMzAuNzItMzAuNzJWMjQ4SDMxMnYtMTZoOTZjMTcuNjczLDAsMzItMTQuMzI3LDMyLTMydi04ICAgQzQ0MCwxNzQuMzI3LDQyNS42NzMsMTYwLDQwOCwxNjB6IE0yMzIsMTUydi0yNGMwLTQuNDEsMy41ODYtOCw4LThoMzJjNC40MTQsMCw4LDMuNTksOCw4djI0SDIzMnoiLz4KCjwvZz4KCjxnIGlkPSJMYXllcl8xIi8+Cgo8L3N2Zz4=";
-    uint256 constant DEFAULT_MOCK_IMAGE_URI_LENGTH = 4;
-    uint256 constant DEFAULT_MOCK_NB_OF_AUCTIONS = 1;
-    string constant DEFAULT_MOCK_DESCRIPTION = "A nice collection from Jean Michel Mock";
 
     /*//////////////////////////////////////////////////////////////
                     ADDITIONAL MOCKED AUNCTION for unit tests
@@ -44,12 +45,14 @@ contract NFTBoosterAuctionsTest is Test {
         "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PgoKPCEtLSBVcGxvYWRlZCB0bzogU1ZHIFJlcG8sIHd3dy5zdmdyZXBvLmNvbSwgR2VuZXJhdG9yOiBTVkcgUmVwbyBNaXhlciBUb29scyAtLT4KPHN2ZyBmaWxsPSIjMDAwMDAwIiB3aWR0aD0iODAwcHgiIGhlaWdodD0iODAwcHgiIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiB2ZXJzaW9uPSIxLjEiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgoKPGcgaWQ9ImdpZnRfYm94LWJveF8taGVhcnQtbG92ZS12YWxlbnRpbmUiPgoKPHBhdGggZD0iTTQwOCwxNjBoLTY0YzE1LjU1LTAuMDIxLDI4LjQ4My0xMi43MTksMjguNTA0LTI4LjI2OWMwLjAyMS0xNS41NS0xMi41NjgtMjguMTM5LTI4LjExOC0yOC4xMTggICBjMC4wMjMtMTcuNDg2LTE1LjktMzEuMjI4LTM0LjA0OC0yNy41MDRDMjk3LjEyNCw3OC44MiwyODgsOTEuMDg1LDI4OCwxMDQuNTc1djUuNjY3Yy00LjI1Ni0zLjgzOC05LjgzMS02LjI0Mi0xNi02LjI0MmgtMzIgICBjLTYuMTY5LDAtMTEuNzQ0LDIuNDA0LTE2LDYuMjQydi01LjY2N2MwLTEzLjQ5MS05LjEyNC0yNS43NTUtMjIuMzM5LTI4LjQ2N2MtMTguMTQ4LTMuNzI0LTM0LjA3MSwxMC4wMTgtMzQuMDQ4LDI3LjUwNCAgIGMtMTUuNTQ5LTAuMDIxLTI4LjEzOCwxMi41NjgtMjguMTE4LDI4LjExOEMxMzkuNTE3LDE0Ny4yODEsMTUyLjQ1LDE1OS45NzksMTY4LDE2MGgtNjRjLTE3LjY3MywwLTMyLDE0LjMyNy0zMiwzMnY4ICAgYzAsMTcuNjczLDE0LjMyNywzMiwzMiwzMmg5NnYxNkg5NnYxNjEuMjhjMCwxNi45NjYsMTMuNzU0LDMwLjcyLDMwLjcyLDMwLjcySDIwMGM4LjgzNywwLDE2LTcuMTYzLDE2LTE2VjE2OGg4MHYyNTYgICBjMCw4LjgzNyw3LjE2MywxNiwxNiwxNmg3My4yOGMxNi45NjYsMCwzMC43Mi0xMy43NTQsMzAuNzItMzAuNzJWMjQ4SDMxMnYtMTZoOTZjMTcuNjczLDAsMzItMTQuMzI3LDMyLTMydi04ICAgQzQ0MCwxNzQuMzI3LDQyNS42NzMsMTYwLDQwOCwxNjB6IE0yMzIsMTUydi0yNGMwLTQuNDEsMy41ODYtOCw4LThoMzJjNC40MTQsMCw4LDMuNTksOCw4djI0SDIzMnoiLz4KCjwvZz4KCjxnIGlkPSJMYXllcl8xIi8+Cgo8L3N2Zz4=";
     uint256 constant ADDITIONNAL_MOCK_IMAGE_URI_LENGTH = 1;
     uint256 constant ADDITIONNAL_MOCK_NB_OF_AUCTIONS = 2;
+    uint256 constant ADDITIONNAL_MOCK_INDEX = 1;
 
     /*//////////////////////////////////////////////////////////////
                                 STATES
     //////////////////////////////////////////////////////////////*/
     string[] s_tmpImageUris;
     NFTBoosterAuctions public s_nftBoosterAuctions;
+    NFTBooster public s_nftBooster;
 
     function setUp() external {
         DeployNFTBoosterAuctions deployer = new DeployNFTBoosterAuctions();
@@ -61,21 +64,39 @@ contract NFTBoosterAuctionsTest is Test {
     /*//////////////////////////////////////////////////////////////
                             MODIFIERS
     //////////////////////////////////////////////////////////////*/
-    modifier bidIsOpen() {
+    modifier initialBidIsOpen() {
         vm.prank(msg.sender);
-        s_nftBoosterAuctions.openBid(0);
-        assertEq(s_nftBoosterAuctions.isAunctionPublished(0), true);
+        s_nftBoosterAuctions.openBid(DEFAULT_MOCK_INDEX);
+        assertEq(s_nftBoosterAuctions.isAunctionPublished(DEFAULT_MOCK_INDEX), true);
         _;
     }
 
     modifier oneBidWasMadeByUser1() {
         vm.prank(msg.sender);
-        s_nftBoosterAuctions.openBid(0);
-        assertEq(s_nftBoosterAuctions.isAunctionPublished(0), true);
+        s_nftBoosterAuctions.openBid(DEFAULT_MOCK_INDEX);
+        assertEq(s_nftBoosterAuctions.isAunctionPublished(DEFAULT_MOCK_INDEX), true);
         vm.startPrank(user1);
-        s_nftBoosterAuctions.bidForAuction{value: s_nftBoosterAuctions.getNextBiddingPriceInWei(0)}(0);
+        s_nftBoosterAuctions.bidForAuction{value: s_nftBoosterAuctions.getNextBiddingPriceInWei(DEFAULT_MOCK_INDEX)}(
+            DEFAULT_MOCK_INDEX
+        );
         vm.stopPrank();
-        assertEq(s_nftBoosterAuctions.getBestBidder(0), user1);
+        assertEq(s_nftBoosterAuctions.getBestBidder(DEFAULT_MOCK_INDEX), user1);
+        _;
+    }
+
+    modifier initialBidEnded() {
+        vm.prank(msg.sender);
+        s_nftBoosterAuctions.openBid(DEFAULT_MOCK_INDEX);
+        assertEq(s_nftBoosterAuctions.isAunctionPublished(DEFAULT_MOCK_INDEX), true);
+        vm.prank(user1);
+        s_nftBoosterAuctions.bidForAuction{value: s_nftBoosterAuctions.getNextBiddingPriceInWei(DEFAULT_MOCK_INDEX)}(
+            DEFAULT_MOCK_INDEX
+        );
+        assertEq(s_nftBoosterAuctions.getBestBidder(DEFAULT_MOCK_INDEX), user1);
+        vm.warp(block.timestamp + ADDITIONNAL_MOCK_BID_DURATION + 1);
+        vm.roll(block.number + 1);
+        vm.prank(msg.sender);
+        s_nftBoosterAuctions.checkAndEndAuction(DEFAULT_MOCK_INDEX);
         _;
     }
 
@@ -138,6 +159,26 @@ contract NFTBoosterAuctionsTest is Test {
     }
 
     /*//////////////////////////////////////////////////////////////
+                            AUCTION OPENING
+    //////////////////////////////////////////////////////////////*/
+    function testOwnerCanOpenBid() public {
+        assertEq(s_nftBoosterAuctions.isAunctionPublished(0), false);
+        vm.prank(msg.sender);
+        s_nftBoosterAuctions.openBid(0);
+        assertEq(s_nftBoosterAuctions.isAunctionPublished(0), true);
+    }
+
+    function testUserCantOpenBid() public {
+        assertEq(s_nftBoosterAuctions.isAunctionPublished(0), false);
+        vm.prank(user1);
+        vm.expectRevert(NFTBoosterAuctions.NFTBoosterAuctions__OwnerOnly.selector);
+        s_nftBoosterAuctions.openBid(0);
+    }
+
+    // TODO relou mais à faire avec un modifier already deployed
+    function testCantOpenBidIfAlreadyDeployed() public {}
+
+    /*//////////////////////////////////////////////////////////////
                             BID ON AUCTION
     //////////////////////////////////////////////////////////////*/
     function testCanBidIfAllOk() public bidIsOpen {
@@ -191,34 +232,6 @@ contract NFTBoosterAuctionsTest is Test {
 
     function testCantBidIfNotOpen() public {
         vm.startPrank(user1);
-        uint256 sendValue = s_nftBoosterAuctions.getNextBiddingPriceInWei(0);
-        vm.expectRevert(abi.encodeWithSelector(NFTBoosterAuctions.NFTBoosterAuctions__InvalidBiddingAmount.selector, 0));
-        s_nftBoosterAuctions.bidForAuction{value: sendValue}(0);
-        vm.stopPrank();
-    }
-
-    // TODO relou mais à faire
-    function testCantOpenBidIfAlreadyDeployed() public {}
-
-    /*//////////////////////////////////////////////////////////////
-                            AUCTION OPENING
-    //////////////////////////////////////////////////////////////*/
-    function testOwnerCanOpenBid() public {
-        assertEq(s_nftBoosterAuctions.isAunctionPublished(0), false);
-        vm.prank(msg.sender);
-        s_nftBoosterAuctions.openBid(0);
-        assertEq(s_nftBoosterAuctions.isAunctionPublished(0), true);
-    }
-
-    function testUserCantOpenBid() public {
-        assertEq(s_nftBoosterAuctions.isAunctionPublished(0), false);
-        vm.prank(user1);
-        vm.expectRevert(NFTBoosterAuctions.NFTBoosterAuctions__OwnerOnly.selector);
-        s_nftBoosterAuctions.openBid(0);
-    }
-
-    function testCantBidOnNotOpenBid() public {
-        vm.startPrank(user1);
         // isolating this variable is mandatory because: https://ethereum.stackexchange.com/questions/158768/vm-expectrevert-is-not-working-as-expected-in-foundry
         uint256 sendValue = s_nftBoosterAuctions.getNextBiddingPriceInWei(0);
         vm.expectRevert(abi.encodeWithSelector(NFTBoosterAuctions.NFTBoosterAuctions__BidNotOpen.selector, 0));
@@ -226,24 +239,45 @@ contract NFTBoosterAuctionsTest is Test {
         vm.stopPrank();
     }
 
+    // TODO relou mais à faire avec un modifier already deployed
+    function testCantBidIfAlreadyDeployed() public {}
+
     /*//////////////////////////////////////////////////////////////
-                          BID ENDING
+                        CHECK AND END BID (by owner)
     //////////////////////////////////////////////////////////////*/
-    // todo: cant end bid because no one ever participated
-    function testCantEndABidWithoutBidders() public {}
+    // TODO si tout marche ! Tester nouveau contrat NFT (propriété, nombre de NFR, symbol, titre etc... + owner got the money of the sale)
     // after bid ending new owner of Booster contract is best bidder + and has correct nb of nft.
     function testEndingABidWorks() public {}
+    // TODO
+    function testCantEndABidIfNotOpen() public {}
+    // TODO
+    function testCantEndBidIfNotOwner() public {}
+    // todo: cant end bid because no one ever participated
+    function testCantEndABidWithoutBidders() public {}
     // TODO : can't bid if expiry date not passed.
+    function testCantEndABidIfDurationTimeNotPassed() public {}
 
     /*//////////////////////////////////////////////////////////////
                             CHECK UPKEEP 
     //////////////////////////////////////////////////////////////*/
+    // TODO Sent value is abi.decode(index 0)
+    function testCheckUpkeepReturnsTrue() public {}
     // TODO Upkeep not needed
-    // perform upkeep can't work if checupKeep returns false
+    function testCheckUpkeepReturnsFalseIfNotOpen() public {}
+    // TODO
+    function testCheckUpkeepReturnsFalseIfDurationTimeNotPassed() public {}
+    // TODO
+    function testCheckUpkeepReturnsFalseIfNotBidders() public {}
 
     /*//////////////////////////////////////////////////////////////
                             PERFORM UPKEEP 
     //////////////////////////////////////////////////////////////*/
-    // vm.warp(block.timestamp + automationUpdateInterval + 1);
-    // vm.roll(block.number + 1);
+    // TODO
+    function testPerformWorks() public {}
+    // TODO
+    function testPerformRevertIfDurationTimeNotPassed() public {}
+    // TODO
+    function testPerformRevertIfNotBidders() public {}
+    // TODO
+    function testPerformRevertIfNotOpen() public {}
 }

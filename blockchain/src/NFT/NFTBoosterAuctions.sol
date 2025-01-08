@@ -97,6 +97,18 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
         );
     }
 
+    // TODO set status to cancelled
+    function cancelBid(uint256 i) public ownerOnly {}
+
+    function openBid(uint256 i) public ownerOnly {
+        if (s_auctions[i].status == AuctionStatus.READY && s_auctions[i].deployed == address(0)) {
+            s_auctions[i].status = AuctionStatus.OPEN;
+            s_auctions[i].openingTimeStamp = block.timestamp;
+        } else {
+            revert NFTBoosterAuctions__BidAlreadyAchieved(i);
+        }
+    }
+
     function bidForAuction(uint256 i) public payable isBiddable(i) {
         //CHECK if previous isn't the same as msg.sender
         if (msg.sender == s_auctions[i].bestBidder) {
@@ -124,18 +136,6 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
             require(callSuccess, "Call failed");
         }
         emit NewBid(i, msg.sender, msg.value);
-    }
-
-    // TODO set status to cancelled
-    function cancelBid(uint256 i) public ownerOnly {}
-
-    function openBid(uint256 i) public ownerOnly {
-        if (s_auctions[i].status == AuctionStatus.READY && s_auctions[i].deployed == address(0)) {
-            s_auctions[i].status = AuctionStatus.OPEN;
-            s_auctions[i].openingTimeStamp = block.timestamp;
-        } else {
-            revert NFTBoosterAuctions__BidAlreadyAchieved(i);
-        }
     }
 
     // for given auction do controls and pick the winner, create the ERC721 contract and mint the related nfts
