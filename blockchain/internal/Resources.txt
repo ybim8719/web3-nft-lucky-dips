@@ -19,3 +19,7 @@ https://blog.openzeppelin.com/deconstructing-a-solidity-smart-contract-part-i-in
 
 snes css https://nostalgic-css.github.io/NES.css/
 
+51% attack : https://www.crypto51.app/
+
+Nodes listing : https://bitnodes.io/
+

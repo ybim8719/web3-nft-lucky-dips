@@ -5,6 +5,7 @@ import {Script, console} from "forge-std/Script.sol";
 import {NFTBoosterAuctions} from "../../src/NFT/NFTBoosterAuctions.sol";
 import {Auction} from "../../src/NFT/structs/Auction.sol";
 import {ConvertSvg} from "./ConvertSvg.sol";
+import {AuctionJson} from "../../feed/struct/AuctionJson.sol";
 
 /**
  * @title
@@ -16,15 +17,7 @@ import {ConvertSvg} from "./ConvertSvg.sol";
 contract DeployNFTBoosterAuctions is Script {
     using ConvertSvg for string;
 
-    struct AuctionJson {
-        uint256 bidDuration;
-        uint256 bidStep;
-        string description;
-        string name;
-        string[] nftCollection;
-        uint256 startingBid;
-        string symbol;
-    }
+    error NftCollectionEmpty();
 
     string constant SVG_FOLDER_PATH = "./feed/img/";
     NFTBoosterAuctions s_nftBoosterAuctions;
@@ -33,15 +26,10 @@ contract DeployNFTBoosterAuctions is Script {
     /*//////////////////////////////////////////////////////////////
                             JSON FEED
     //////////////////////////////////////////////////////////////*/
-    string[] auctionsFeed =
-        ["./feed/lucky-dip1.json", "./feed/lucky-dip2.json", "./feed/lucky-dip3.json", "./feed/lucky-dip4.json"];
     string[] mockedAuctionsFeed = ["./feed/mocked-luckydip1.json"];
-
-    error NftCollectionEmpty();
 
     function run() external returns (NFTBoosterAuctions) {
         deploy();
-        populateAuctions();
         return s_nftBoosterAuctions;
     }
 
@@ -58,10 +46,6 @@ contract DeployNFTBoosterAuctions is Script {
         vm.startBroadcast();
         s_nftBoosterAuctions = new NFTBoosterAuctions();
         vm.stopBroadcast();
-    }
-
-    function populateAuctions() internal {
-        populateFromJson(msg.sender, auctionsFeed);
     }
 
     function populateWithMockedAuctions(address caller) internal {
@@ -85,8 +69,7 @@ contract DeployNFTBoosterAuctions is Script {
                     )
                 );
             }
-
-            vm.prank(caller);
+            vm.startBroadcast(caller);
             s_nftBoosterAuctions.addAuction(
                 auctionToAdd.description,
                 auctionToAdd.symbol,
@@ -96,6 +79,7 @@ contract DeployNFTBoosterAuctions is Script {
                 auctionToAdd.bidDuration,
                 s_tmpImageUris
             );
+            vm.stopBroadcast();
         }
     }
 }
