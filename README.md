@@ -36,7 +36,7 @@ forge test
 
 Please note that gas limit has been increased to support adding of auctions in Interactions.s.sol.
 
-2. Run the following command to deploy the contract to a test network (given address is the private key of the default account1 created by anvil):
+2. Run the following command to deploy the contract to a test network (<u>the private key given in example is the default account1 created by anvil</u>):
 
 ```bash
 forge script script/NFT/DeployNFTBoosterAuctions.s.sol --rpc-url http://localhost:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast
@@ -51,11 +51,11 @@ forge script script/NFT/Interactions.s.sol --rpc-url http://localhost:8545 --pri
 3. Interact with the contract using cast (few examples) : 
 
 ```bash
-forge cast call < copy-paste-here-the-address-deployed-contract > "getBidDuration(uint256 i)" 0
+forge cast call <PASTE-THE-ADDRESS-OF-CONTRACT> "getBidDuration(uint256 i)" 0
 
-forge cast call < copy-paste-here-the-address-deployed-contract > "getNextBiddingPriceInWei(uint256 i)" 0
+forge cast call <PASTE-THE-ADDRESS-OF-CONTRACT> "getNextBiddingPriceInWei(uint256 i)" 0
 
-forge cast send --value 0.0250000000000000 < copy-paste-here-the-address-deployed-contract > "bidForAuction(uint256 i)" 0 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+forge cast send --value 0.0250000000000000 <PASTE-THE-ADDRESS-OF-CONTRACT> "bidForAuction(uint256 i)" 0 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 ```
 
 
