@@ -209,9 +209,6 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
         returns (bool upkeepNeeded, bytes memory performData)
     {
         for (uint256 i = 0; i < s_auctions.length;) {
-            console.log(
-                s_auctions[i].status == AuctionStatus.OPEN, getBestBidder(i) != address(0), hasDurationDatePassed(i)
-            );
             if (
                 s_auctions[i].status == AuctionStatus.OPEN && getBestBidder(i) != address(0) && hasDurationDatePassed(i)
             ) {
@@ -305,5 +302,9 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
 
     function getDeployed(uint256 i) public view returns (address) {
         return s_auctions[i].deployed;
+    }
+
+    function getBidStep(uint256 i) public view returns (uint256) {
+        return s_auctions[i].bidStep;
     }
 }

@@ -56,10 +56,12 @@ contract NFTBoosterAuctionsTest is Test {
     string[] s_tmpImageUris;
     NFTBoosterAuctions public s_nftBoosterAuctions;
     NFTBooster public s_nftBooster;
+    uint256 s_auctionsInitialBalance;
 
     function setUp() external {
         DeployNFTBoosterAuctions deployer = new DeployNFTBoosterAuctions();
         s_nftBoosterAuctions = deployer.runMocked(msg.sender);
+        s_auctionsInitialBalance = address(s_nftBoosterAuctions).balance;
         vm.deal(user1, STARTING_BALANCE);
         vm.deal(user2, STARTING_BALANCE);
     }
@@ -228,8 +230,8 @@ contract NFTBoosterAuctionsTest is Test {
     /*//////////////////////////////////////////////////////////////
                             BID ON AUCTION
     //////////////////////////////////////////////////////////////*/
-
     function testCanBidIfAllOk() public initialBidIsOpen {
+        uint256 initialBalance = address(s_nftBoosterAuctions).balance;
         vm.startPrank(user1);
         uint256 sendValue = s_nftBoosterAuctions.getNextBiddingPriceInWei(DEFAULT_MOCK_INDEX);
         s_nftBoosterAuctions.bidForAuction{value: sendValue}(DEFAULT_MOCK_INDEX);
@@ -240,16 +242,22 @@ contract NFTBoosterAuctionsTest is Test {
         );
         assertEq(s_nftBoosterAuctions.getBestBidder(DEFAULT_MOCK_INDEX), user1);
         assertEq(address(user1).balance, STARTING_BALANCE - sendValue);
-        assertEq(address(s_nftBoosterAuctions).balance, sendValue);
+        assertEq(
+            address(s_nftBoosterAuctions).balance,
+            initialBalance + s_nftBoosterAuctions.getStartingBid(DEFAULT_MOCK_INDEX)
+        );
     }
 
     function testPreviousBidderGetHisMoneyBack() public oneBidWasMadeByUser1 {
+        uint256 initialBalance = address(s_nftBoosterAuctions).balance;
         uint256 sendValue = s_nftBoosterAuctions.getNextBiddingPriceInWei(DEFAULT_MOCK_INDEX);
         vm.prank(user2);
         s_nftBoosterAuctions.bidForAuction{value: sendValue}(DEFAULT_MOCK_INDEX);
         assertEq(address(user1).balance, STARTING_BALANCE);
         assertEq(address(user2).balance, STARTING_BALANCE - sendValue);
-        assertEq(address(s_nftBoosterAuctions).balance, sendValue);
+        assertEq(
+            address(s_nftBoosterAuctions).balance, initialBalance + s_nftBoosterAuctions.getBidStep(DEFAULT_MOCK_INDEX)
+        );
     }
 
     function testCantBidWithInvalidAmount() public initialBidIsOpen {
@@ -429,6 +437,6 @@ contract NFTBoosterAuctionsTest is Test {
             assertEq(s_nftBooster.ownerOf(i), s_nftBoosterAuctions.getBestBidder(DEFAULT_MOCK_INDEX));
         }
         // balance
-        assertEq(address(s_nftBoosterAuctions).balance, 0);
+        assertEq(address(s_nftBoosterAuctions).balance, s_auctionsInitialBalance);
     }
 }
