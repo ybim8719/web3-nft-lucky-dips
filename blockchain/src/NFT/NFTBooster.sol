@@ -50,8 +50,8 @@ contract NFTBooster is ERC721, Ownable {
             revert NFTBooster__MaxNbOfMintableNFTReached();
         }
         s_tokenIdToUri[s_tokenCounter] = tokenUri;
-        s_tokenCounter = s_tokenCounter + 1;
         _safeMint(owner, s_tokenCounter);
+        s_tokenCounter = s_tokenCounter + 1;
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -103,5 +103,13 @@ contract NFTBooster is ERC721, Ownable {
 
     function getOwner() public view returns (address) {
         return owner();
+    }
+
+    function getSymbol() public view returns (string memory) {
+        return symbol();
+    }
+
+    function getName() public view returns (string memory) {
+        return name();
     }
 }

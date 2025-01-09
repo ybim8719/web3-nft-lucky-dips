@@ -23,6 +23,7 @@ contract NFTBoosterAuctionsTest is Test {
                         DEFAULT INJECTED MOCKED AUNCTION 
     //////////////////////////////////////////////////////////////*/
     string constant DEFAULT_MOCK_NAME = "JeanMiMock";
+    string constant DEFAULT_MOCK_SYMBOL = "MOCK";
     uint256 constant DEFAULT_MOCK_STARTINGBID = 2500000000000000; // 2.5e15 wei or / 0.0025eth
     uint256 constant DEFAULT_MOCK_BIDSTEP = 10000000000000;
     uint256 constant DEFAULT_MOCK_BID_DURATION = 259200;
@@ -349,7 +350,6 @@ contract NFTBoosterAuctionsTest is Test {
         vm.warp(block.timestamp + DEFAULT_MOCK_BID_DURATION + 1);
         vm.roll(block.number + 1);
         vm.prank(user1);
-        vm.expectRevert(NFTBoosterAuctions.NFTBoosterAuctions__UpkeepNotNeeded.selector);
         s_nftBoosterAuctions.performUpkeep(abi.encode(DEFAULT_MOCK_INDEX));
         address deployed = s_nftBoosterAuctions.getDeployed(DEFAULT_MOCK_INDEX);
         s_nftBooster = NFTBooster(deployed);
@@ -377,21 +377,19 @@ contract NFTBoosterAuctionsTest is Test {
     }
 
     function testBidEndingWorksTotally() private view {
+        uint256 finalBid = s_nftBoosterAuctions.getCurrentBiddingPriceInWei(DEFAULT_MOCK_INDEX);
+        //auctions
         assertEq(s_nftBoosterAuctions.getDeployed(DEFAULT_MOCK_INDEX) != address(0), true);
         assertEq(s_nftBoosterAuctions.getStatus(DEFAULT_MOCK_INDEX) == AuctionStatus.CLOSED, true);
-        assertEq(
-            keccak256(abi.encodePacked(s_nftBooster.getDescription()))
-                == keccak256(abi.encodePacked(DEFAULT_MOCK_DESCRIPTION)),
-            true
-        );
-        // nft contract symbol
-        // nft contract name
-        // nft desc
-        // current bidding piceIn wei
-        // NFT length
-        // user1 Is owner of each NFT
-
-        // money of bid sent to owner
-        // contract money = 0
+        //booster
+        assertEq(s_nftBooster.getSymbol(), DEFAULT_MOCK_SYMBOL);
+        assertEq(s_nftBooster.getDescription(), DEFAULT_MOCK_DESCRIPTION);
+        assertEq(s_nftBooster.getName(), DEFAULT_MOCK_NAME);
+        assertEq(s_nftBooster.getFinalBid(), finalBid);
+        assertEq(s_nftBooster.getTokenCounter(), DEFAULT_MOCK_IMAGE_URI_LENGTH);
+        for (uint256 i = 0; i < DEFAULT_MOCK_IMAGE_URI_LENGTH; i++) {
+            assertEq(s_nftBooster.ownerOf(i), s_nftBoosterAuctions.getBestBidder(DEFAULT_MOCK_INDEX));
+        }
+        assertEq(address(s_nftBoosterAuctions).balance, 0);
     }
 }
