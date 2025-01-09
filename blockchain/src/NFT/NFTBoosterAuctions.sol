@@ -31,6 +31,7 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
     error NFTBoosterAuctions__UnsufficientFunds(uint256 amountToSend, uint256 currentBalance);
     error NFTBoosterAuctions__CantBidWhenAlreadyBestBidder(uint256 index);
     error NFTBoosterAuctions__NoOneHasBid(uint256 index);
+    error NFTBoosterAuctions__CantClosedAuction(uint256 index);
 
     /*//////////////////////////////////////////////////////////////
                             EVENTS
@@ -63,7 +64,6 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
         if (s_auctions[i].status != AuctionStatus.OPEN) {
             revert NFTBoosterAuctions__BidNotOpen(i);
         }
-
         _;
     }
 
@@ -98,10 +98,17 @@ contract NFTBoosterAuctions is AutomationCompatibleInterface {
         );
     }
 
-    // TODO set status to cancelled
-    function cancelBid(uint256 i) public ownerOnly {}
+    function cancelAunction(uint256 i) public ownerOnly {
+        if (getStatus(i) == AuctionStatus.READY) {
+            s_auctions[i].status = AuctionStatus.CLOSED;
+        } else if (getStatus(i) == AuctionStatus.OPEN && getBestBidder(i) == address(0)) {
+            s_auctions[i].status = AuctionStatus.CLOSED;
+        } else {
+            revert NFTBoosterAuctions__CantClosedAuction(i);
+        }
+    }
 
-    function openBid(uint256 i) public ownerOnly {
+    function openAuction(uint256 i) public ownerOnly {
         if (s_auctions[i].status == AuctionStatus.READY && s_auctions[i].deployed == address(0)) {
             s_auctions[i].status = AuctionStatus.OPEN;
             s_auctions[i].openingTimeStamp = block.timestamp;

@@ -69,14 +69,14 @@ contract NFTBoosterAuctionsTest is Test {
     //////////////////////////////////////////////////////////////*/
     modifier initialBidIsOpen() {
         vm.prank(msg.sender);
-        s_nftBoosterAuctions.openBid(DEFAULT_MOCK_INDEX);
+        s_nftBoosterAuctions.openAuction(DEFAULT_MOCK_INDEX);
         assertEq(s_nftBoosterAuctions.isAunctionPublished(DEFAULT_MOCK_INDEX), true);
         _;
     }
 
     modifier oneBidWasMadeByUser1() {
         vm.prank(msg.sender);
-        s_nftBoosterAuctions.openBid(DEFAULT_MOCK_INDEX);
+        s_nftBoosterAuctions.openAuction(DEFAULT_MOCK_INDEX);
         assertEq(s_nftBoosterAuctions.isAunctionPublished(DEFAULT_MOCK_INDEX), true);
         vm.startPrank(user1);
         s_nftBoosterAuctions.bidForAuction{value: s_nftBoosterAuctions.getNextBiddingPriceInWei(DEFAULT_MOCK_INDEX)}(
@@ -89,7 +89,7 @@ contract NFTBoosterAuctionsTest is Test {
 
     modifier initialBidEnded() {
         vm.prank(msg.sender);
-        s_nftBoosterAuctions.openBid(DEFAULT_MOCK_INDEX);
+        s_nftBoosterAuctions.openAuction(DEFAULT_MOCK_INDEX);
         assertEq(s_nftBoosterAuctions.isAunctionPublished(DEFAULT_MOCK_INDEX), true);
         vm.startPrank(user1);
         s_nftBoosterAuctions.bidForAuction{value: s_nftBoosterAuctions.getNextBiddingPriceInWei(DEFAULT_MOCK_INDEX)}(
@@ -171,7 +171,7 @@ contract NFTBoosterAuctionsTest is Test {
     function testOwnerCanOpenBid() public {
         assertEq(s_nftBoosterAuctions.isAunctionPublished(DEFAULT_MOCK_INDEX), false);
         vm.prank(msg.sender);
-        s_nftBoosterAuctions.openBid(DEFAULT_MOCK_INDEX);
+        s_nftBoosterAuctions.openAuction(DEFAULT_MOCK_INDEX);
         assertEq(s_nftBoosterAuctions.isAunctionPublished(DEFAULT_MOCK_INDEX), true);
     }
 
@@ -179,18 +179,56 @@ contract NFTBoosterAuctionsTest is Test {
         assertEq(s_nftBoosterAuctions.isAunctionPublished(DEFAULT_MOCK_INDEX), false);
         vm.prank(user1);
         vm.expectRevert(NFTBoosterAuctions.NFTBoosterAuctions__OwnerOnly.selector);
-        s_nftBoosterAuctions.openBid(DEFAULT_MOCK_INDEX);
+        s_nftBoosterAuctions.openAuction(DEFAULT_MOCK_INDEX);
     }
 
     function testCantOpenBidIfAlreadyDeployed() public initialBidEnded {
         vm.prank(msg.sender);
         vm.expectRevert();
-        s_nftBoosterAuctions.openBid(DEFAULT_MOCK_INDEX);
+        s_nftBoosterAuctions.openAuction(DEFAULT_MOCK_INDEX);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            CANCEL AUNCTION
+    //////////////////////////////////////////////////////////////*/
+    function testCantCancelIfNotOwner() public {
+        vm.prank(user1);
+        vm.expectRevert(NFTBoosterAuctions.NFTBoosterAuctions__OwnerOnly.selector);
+        s_nftBoosterAuctions.cancelAunction(DEFAULT_MOCK_INDEX);
+    }
+
+    function testCanCancelIfStatusIsReady() public initialBidIsOpen {
+        vm.prank(msg.sender);
+        s_nftBoosterAuctions.cancelAunction(DEFAULT_MOCK_INDEX);
+        assertEq(s_nftBoosterAuctions.getStatus(DEFAULT_MOCK_INDEX) == AuctionStatus.CLOSED, true);
+    }
+
+    function testCantCancelIfAlreadyClosed() public initialBidIsOpen {
+        vm.startPrank(msg.sender);
+        s_nftBoosterAuctions.cancelAunction(DEFAULT_MOCK_INDEX);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                NFTBoosterAuctions.NFTBoosterAuctions__CantClosedAuction.selector, DEFAULT_MOCK_INDEX
+            )
+        );
+        s_nftBoosterAuctions.cancelAunction(DEFAULT_MOCK_INDEX);
+        vm.stopPrank();
+    }
+
+    function testCantCancelIfAuctionHasBidder() public oneBidWasMadeByUser1 {
+        vm.prank(msg.sender);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                NFTBoosterAuctions.NFTBoosterAuctions__CantClosedAuction.selector, DEFAULT_MOCK_INDEX
+            )
+        );
+        s_nftBoosterAuctions.cancelAunction(DEFAULT_MOCK_INDEX);
     }
 
     /*//////////////////////////////////////////////////////////////
                             BID ON AUCTION
     //////////////////////////////////////////////////////////////*/
+
     function testCanBidIfAllOk() public initialBidIsOpen {
         vm.startPrank(user1);
         uint256 sendValue = s_nftBoosterAuctions.getNextBiddingPriceInWei(DEFAULT_MOCK_INDEX);
@@ -390,6 +428,7 @@ contract NFTBoosterAuctionsTest is Test {
         for (uint256 i = 0; i < DEFAULT_MOCK_IMAGE_URI_LENGTH; i++) {
             assertEq(s_nftBooster.ownerOf(i), s_nftBoosterAuctions.getBestBidder(DEFAULT_MOCK_INDEX));
         }
+        // balance
         assertEq(address(s_nftBoosterAuctions).balance, 0);
     }
 }
