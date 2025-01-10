@@ -55,31 +55,47 @@ cast call <PASTE-THE-ADDRESS-OF-CONTRACT> "getBidDuration(uint256 i)" 0
 
 cast call <PASTE-THE-ADDRESS-OF-CONTRACT> "getNextBiddingPriceInWei(uint256 i)" 0
 
-cast send --value 0.0250000000000000 <PASTE-THE-ADDRESS-OF-CONTRACT> "bidForAuction(uint256 i)" 0 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+cast send  <PASTE-THE-ADDRESS-OF-CONTRACT> "openAuction(uint256 i)" 0 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+
+cast send --value 2500000000000000 <PASTE-THE-ADDRESS-OF-CONTRACT> "bidForAuction(uint256 i)" 0 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 ```
 
-use cast to convert hex to decimal : 
+### Convert uint with cast (hex to decimal) : 
+
+```bash 
+cast --to-base <uint-to-convert> dec
+```
 
 
-use cast abi-decode to decode strings returned :
+### Decode strings with cast abi-decode :
 
-cast abi-decode "<function-signature>(<return-type>)" <returned-encodedv-value>
+```bash
+cast abi-decode "<function-signature> (<return-type>)" <returned-encoded-value>
+```
 
 Example : 
 
 ```
-cast call 0x5FbDB2315678afecb367f032d93F642f64180aa3 "getName(uint256 i)" 0
+cast call <PASTE-THE-ADDRESS-OF-CONTRACT> "getName(uint256 i)" 0
 ```
 
-returns : 
+returns :
 
+```
 0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000064a65616e4d690000000000000000000000000000000000000000000000000000
+```
 
 decode with :
 
 ```
 cast abi-decode "getName(uint256 i)(string memory)" 0x0000000000000000000000000000000000000000000000000000
 00000000002000000000000000000000000000000000000000000000000000000000000000064a65616e4d690000000000000000000000000000000000000000000000000000
+```
+
+result (as string):
+
+```
+"JeanMi"
 ```
 
 ## Deployment on Sepolia (testnet)
