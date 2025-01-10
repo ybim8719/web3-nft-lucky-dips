@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {Script, console} from "forge-std/Script.sol";
 import {NFTBoosterAuctions} from "../../src/NFT/NFTBoosterAuctions.sol";
 import {Auction} from "../../src/NFT/structs/Auction.sol";
-import {ConvertSvg} from "./ConvertSvg.sol";
+import {ConvertSvg} from "./library/ConvertSvg.sol";
 import {AuctionJson} from "../../feed/struct/AuctionJson.sol";
 
 /**
@@ -26,7 +26,7 @@ contract DeployNFTBoosterAuctions is Script {
     /*//////////////////////////////////////////////////////////////
                             JSON FEED
     //////////////////////////////////////////////////////////////*/
-    string[] mockedAuctionsFeed = ["./feed/mocked-luckydip1.json"];
+    string[] mockedAuctionsFeed = ["./feed/mocked-auction.json"];
 
     function run() external returns (NFTBoosterAuctions) {
         deploy();

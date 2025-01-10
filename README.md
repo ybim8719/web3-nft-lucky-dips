@@ -110,11 +110,11 @@ Then launch the unit tests on forked-url:
 
 Then deploy :
 
-```forge script script/DeployTestUpkeep.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --private-key $PRIVATE_KEY ```
+```forge script script/NFT/DeployNFTBoosterAuctions.s.s.sol:DeployNFTBoosterAuctions --rpc-url $SEPOLIA_RPC_URL --broadcast --private-key $PRIVATE_KEY ```
 
 And Feed :
 
-```forge script script/Interactions.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --private-key $PRIVATE_KEY ```
+```forge script script/NFT/Interactions.s.sol:AddAunctions --rpc-url $SEPOLIA_RPC_URL --broadcast --private-key $PRIVATE_KEY ```
 
 
 ## More about contracts purpose

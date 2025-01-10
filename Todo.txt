@@ -1,16 +1,10 @@
 
-[ ] achieve unit tests for Aunctions (debug forked url, changes with duration and deployed Booster)
-
-[ ] Create deployment for Booster
-[ ] Achieve contracts logic for Booster
-[ ] start unit tests for Booster
-
-[ ] Makefile to achieve
+[ ] make a few unit tests for Booster
 [ ] add minimal front end (with ethers)
 
 
 
-FUTURE PROJECTS : 
+FUTURE WEB3 PROJECTS : 
 
 - video game using stats and characters 
 - enrich the airdrop with new features

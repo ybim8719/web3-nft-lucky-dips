@@ -8,12 +8,12 @@ import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {console} from "forge-std/console.sol";
 
 /**
- * @title
- * @author
- * @notice a very basic contract inherinting ERC721 and representing a booter of NFT won on the aunction bid.
- * Winner is the owner of all of the booster NFT/
+ * @notice a very basic contract inherinting ERC721 and representing a booster of NFT won during the aunction.
+ * The contract is created by the factory NFTBoosterAuctions.soland all NFT are also minted just after
+ * Best bidder becomes the owner of the contract and all the NFT contained inside
  * The limit of mintable NFT is the number of NFT described in the former aunction.
- * @dev
+ * There is no particular function in this contract except that the mapping s_tokenIdToUri permit to get the tokenUri for a given
+ * @dev inherits Ownable
  */
 contract NFTBooster is ERC721, Ownable {
     /*//////////////////////////////////////////////////////////////
@@ -70,7 +70,15 @@ contract NFTBooster is ERC721, Ownable {
                 Base64.encode(
                     bytes( // bytes casting actually unnecessary as 'abi.encodePacked()' returns a bytes
                         abi.encodePacked(
-                            '{"name":"', name(), '", "description":"', s_description, '", "image":"', imageURI, '"}'
+                            '{"name":"',
+                            name(),
+                            '", "description":"',
+                            s_description,
+                            '", "symbol":"',
+                            symbol(),
+                            '", "image":"',
+                            imageURI,
+                            '"}'
                         )
                     )
                 )

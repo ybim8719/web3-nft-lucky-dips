@@ -131,7 +131,7 @@ contract NFTBoosterAuctionsTest is Test {
             (DEFAULT_MOCK_STARTINGBID + (0 * DEFAULT_MOCK_BIDSTEP))
         );
         // TODO encoding of svg seems to behave differently on each machine (base64 -i <path-to-svg-file>)
-        //assertEq(luckyDip.getAunctionNFT(0, 0), MOCK_IMAGE_URI1);
+        //assertEq(s_nftBoosterAuctions.getAunctionNFT(0, 0), MOCK_IMAGE_URI1);
     }
 
     function testMemberCantAddAunction() public {

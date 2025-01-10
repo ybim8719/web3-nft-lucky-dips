@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {Script, console} from "forge-std/Script.sol";
 import {NFTBoosterAuctions} from "../../src/NFT/NFTBoosterAuctions.sol";
 import {Auction} from "../../src/NFT/structs/Auction.sol";
-import {ConvertSvg} from "./ConvertSvg.sol";
+import {ConvertSvg} from "./library/ConvertSvg.sol";
 import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
 import {AuctionJson} from "../../feed/struct/AuctionJson.sol";
 
@@ -17,8 +17,12 @@ contract AddAuctions is Script {
 
     string constant SVG_FOLDER_PATH = "./feed/img/";
 
-    string[] auctionsFeed =
-        ["./feed/lucky-dip1.json", "./feed/lucky-dip2.json", "./feed/lucky-dip3.json", "./feed/lucky-dip4.json"];
+    string[] auctionsFeed = [
+        "./feed/random-auction1.json",
+        "./feed/random-auction2.json",
+        "./feed/random-auction3.json",
+        "./feed/random-auction4.json"
+    ];
     string[] s_tmpImageUris;
 
     error NftCollectionEmpty();
