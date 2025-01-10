@@ -32,7 +32,7 @@ forge test
 
 1. run Anvil (on a separate terminal): 
 
-```bash anvil --gas-limit 300000001 ```
+```anvil --gas-limit 300000001 ```
 
 Please note that gas limit has been increased to support adding of auctions in Interactions.s.sol.
 
@@ -51,13 +51,36 @@ forge script script/NFT/Interactions.s.sol --rpc-url http://localhost:8545 --pri
 3. Interact with the contract using cast (few examples) : 
 
 ```bash
-forge cast call <PASTE-THE-ADDRESS-OF-CONTRACT> "getBidDuration(uint256 i)" 0
+cast call <PASTE-THE-ADDRESS-OF-CONTRACT> "getBidDuration(uint256 i)" 0
 
-forge cast call <PASTE-THE-ADDRESS-OF-CONTRACT> "getNextBiddingPriceInWei(uint256 i)" 0
+cast call <PASTE-THE-ADDRESS-OF-CONTRACT> "getNextBiddingPriceInWei(uint256 i)" 0
 
-forge cast send --value 0.0250000000000000 <PASTE-THE-ADDRESS-OF-CONTRACT> "bidForAuction(uint256 i)" 0 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+cast send --value 0.0250000000000000 <PASTE-THE-ADDRESS-OF-CONTRACT> "bidForAuction(uint256 i)" 0 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 ```
 
+use cast to convert hex to decimal : 
+
+
+use cast abi-decode to decode strings returned :
+
+cast abi-decode "<function-signature>(<return-type>)" <returned-encodedv-value>
+
+Example : 
+
+```
+cast call 0x5FbDB2315678afecb367f032d93F642f64180aa3 "getName(uint256 i)" 0
+```
+
+returns : 
+
+0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000064a65616e4d690000000000000000000000000000000000000000000000000000
+
+decode with :
+
+```
+cast abi-decode "getName(uint256 i)(string memory)" 0x0000000000000000000000000000000000000000000000000000
+00000000002000000000000000000000000000000000000000000000000000000000000000064a65616e4d690000000000000000000000000000000000000000000000000000
+```
 
 ## Deployment on Sepolia (testnet)
 
@@ -67,7 +90,7 @@ To deploy to sepolia testnet, add your variable to .env file as described in the
 
 Then launch the unit tests on forked-url:
 
-``` forge test ```
+``` forge test --fork-url $SEPOLIA_RPC_URL```
 
 Then deploy :
 
