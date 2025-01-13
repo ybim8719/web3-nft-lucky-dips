@@ -2,6 +2,7 @@
 [ ] make a few unit tests for Booster
 [ ] add minimal front end (with ethers)
 
+[ ] get ETH and LINK faucet and deploy on sepolia + register upkeep
 
 
 FUTURE WEB3 PROJECTS : 
@@ -9,5 +10,5 @@ FUTURE WEB3 PROJECTS :
 - video game using stats and characters 
 - enrich the airdrop with new features
 - dao 
-- make a lottery
+
 
